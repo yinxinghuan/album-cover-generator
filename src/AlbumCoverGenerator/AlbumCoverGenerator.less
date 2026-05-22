@@ -144,6 +144,9 @@
   // Hide scrollbar for the document-like feel.
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
+  // Children keep their intrinsic height — otherwise flex-shrink:1
+  // would crush the cover panel to fit, suppressing overflow + scroll.
+  > * { flex-shrink: 0; }
   // Fade the top/bottom edges of scroll content so it doesn't snap
   // against the header/footer.
   -webkit-mask-image: linear-gradient(to bottom,
@@ -156,6 +159,8 @@
     #000 12px,
     #000 calc(100% - 12px),
     transparent 100%);
+  // iOS legacy momentum scroll — harmless on modern Safari.
+  -webkit-overflow-scrolling: touch;
 }
 
 .acg-ticket__foot {
