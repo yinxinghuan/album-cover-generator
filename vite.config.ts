@@ -5,6 +5,14 @@ import path from 'path';
 export default defineConfig({
   base: '/album-cover-generator/',
   plugins: [react()],
+  preview: {
+    host: '0.0.0.0',
+    allowedHosts: true,
+  },
+  server: {
+    host: '0.0.0.0',
+    allowedHosts: true,
+  },
   resolve: {
     alias: { '@shared': path.resolve(__dirname, 'src/shared') },
   },

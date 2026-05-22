@@ -18,11 +18,13 @@ export default function Ticket({ topLabel, catalog, children, footerHero, classN
   return (
     <article className={`acg-ticket ${className}`}>
       <header className="acg-ticket__head">
-        <span className="acg-ticket__mark" aria-hidden>
-          <svg viewBox="0 0 18 12" width="18" height="12">
-            <path d="M2 2h14v8h-3l-1.5-2H6.5L5 10H2z" fill="currentColor" />
-          </svg>
-        </span>
+        <img
+          className="acg-ticket__mark"
+          src="/album-cover-generator/alteru.svg"
+          alt="ALTERU"
+          draggable={false}
+          aria-hidden
+        />
         <span className="acg-ticket__head-label">{topLabel}</span>
         {catalog && <span className="acg-ticket__head-cat">{catalog}</span>}
       </header>

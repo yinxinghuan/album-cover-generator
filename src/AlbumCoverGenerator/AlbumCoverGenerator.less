@@ -54,18 +54,34 @@
   flex-direction: column;
   gap: 16px;
 
-  // Scalloped edges (top + bottom)
-  --r: 9px;
-  --d: 18px;
-  --period: 24px;
+  // Scalloped edges (top + bottom). r = puncture radius, c = how far the
+  // circle center is pushed PAST the edge into the ticket body.
+  //   c = 0   →  perfect half-circle bite (50% visible)
+  //   c > 0   →  more than half visible, deeper "tear" shape
+  // bite depth = r + c. strip is sized just larger than that.
+  --r: 5px;
+  --c: -1px;
+  --period: 16px;
+  --bite: calc(var(--r) + var(--c));    // 10px deep
+  --strip: calc(var(--bite) + 2px);     // 12px tall
   -webkit-mask:
-    radial-gradient(circle var(--r) at 50% 0,    transparent 99%, #000 100%) 0 0   / var(--period) var(--d) repeat-x,
-    radial-gradient(circle var(--r) at 50% 100%, transparent 99%, #000 100%) 0 100% / var(--period) var(--d) repeat-x,
-    linear-gradient(#000, #000) 0 calc(var(--r) + 1px) / 100% calc(100% - var(--d) - 2px) no-repeat;
+    radial-gradient(circle var(--r) at 50% var(--c),
+      transparent 99%, #000 100%) 0 0   / var(--period) var(--strip) repeat-x,
+    radial-gradient(circle var(--r) at 50% calc(100% - var(--c)),
+      transparent 99%, #000 100%) 0 100% / var(--period) var(--strip) repeat-x,
+    linear-gradient(#000, #000)
+      0 var(--bite)
+      / 100% calc(100% - 2 * var(--bite))
+      no-repeat;
           mask:
-    radial-gradient(circle var(--r) at 50% 0,    transparent 99%, #000 100%) 0 0   / var(--period) var(--d) repeat-x,
-    radial-gradient(circle var(--r) at 50% 100%, transparent 99%, #000 100%) 0 100% / var(--period) var(--d) repeat-x,
-    linear-gradient(#000, #000) 0 calc(var(--r) + 1px) / 100% calc(100% - var(--d) - 2px) no-repeat;
+    radial-gradient(circle var(--r) at 50% var(--c),
+      transparent 99%, #000 100%) 0 0   / var(--period) var(--strip) repeat-x,
+    radial-gradient(circle var(--r) at 50% calc(100% - var(--c)),
+      transparent 99%, #000 100%) 0 100% / var(--period) var(--strip) repeat-x,
+    linear-gradient(#000, #000)
+      0 var(--bite)
+      / 100% calc(100% - 2 * var(--bite))
+      no-repeat;
 }
 
 .acg-ticket__head {
@@ -82,10 +98,9 @@
 }
 
 .acg-ticket__mark {
-  display: inline-flex;
-  color: @light;
-  width: 18px;
-  height: 12px;
+  display: inline-block;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
 }
 
@@ -423,9 +438,8 @@
 }
 
 .acg-press__arrow {
-  font-family: @font-grotesque;
-  font-weight: 900;
-  font-size: 24px;
+  display: inline-block;
+  flex-shrink: 0;
 }
 
 @keyframes acg-press-pulse {
@@ -499,23 +513,242 @@
 // Placeholder cover (input + loading) — flat black with a centered vinyl
 // + a caption label below it.
 .acg-cover-panel--placeholder {
+  aspect-ratio: auto;
+  height: 340px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background:
-    radial-gradient(circle at 50% 50%,
-      rgba(255, 226, 201, 0.04) 0%,
-      transparent 60%),
-    @ink;
-  gap: 14px;
+  background: @ink;
+  gap: 20px;
+}
+
+// ===== Release display: cover sleeve + half-extracted vinyl =====
+//
+// On the result page, the cover panel is replaced by a composition: the
+// realistic vinyl sits behind the sleeve, with its right half visible —
+// like a record half-pulled from its sleeve.
+
+.acg-release-display {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 4px 0 2px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.acg-release-display__sleeve {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 75%;
+  aspect-ratio: 1 / 1;
+  z-index: 2;
+  overflow: hidden;
+  background: @ink;
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(0, 0, 0, 0.4);
+  transform: translateY(-50%);
+  transition:
+    width 540ms cubic-bezier(0.4, 0.0, 0.2, 1),
+    left 540ms cubic-bezier(0.4, 0.0, 0.2, 1),
+    opacity 360ms ease;
+}
+
+.acg-release-display__art {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.acg-release-display__vinyl {
+  position: absolute;
+  // Default position: pulled right, center near sleeve's right edge so
+  // only the right half shows.
+  left: 50%;
+  top: 50%;
+  width: 78%;
+  aspect-ratio: 1 / 1;
+  transform: translate(-3%, -50%);
+  z-index: 1;
+  transition:
+    left 540ms cubic-bezier(0.4, 0.0, 0.2, 1),
+    width 540ms cubic-bezier(0.4, 0.0, 0.2, 1),
+    transform 540ms cubic-bezier(0.4, 0.0, 0.2, 1),
+    opacity 360ms ease;
+}
+
+// ─── Mode: COVER ONLY ───
+// Sleeve grows to fill, centered. Vinyl slides off to the right + fades.
+.acg-release-display--cover {
+  .acg-release-display__sleeve {
+    width: 96%;
+    left: 2%;
+  }
+  .acg-release-display__vinyl {
+    left: 130%;
+    transform: translate(0, -50%);
+    opacity: 0;
+  }
+}
+
+// ─── Mode: VINYL ONLY ───
+// Vinyl grows to fill, centered. Sleeve slides off left + fades.
+.acg-release-display--vinyl {
+  .acg-release-display__sleeve {
+    width: 75%;
+    left: -110%;
+    opacity: 0;
+  }
+  .acg-release-display__vinyl {
+    left: 50%;
+    width: 92%;
+    transform: translate(-50%, -50%);
+  }
+}
+
+// ===== Like badge + button =====
+
+.acg-like-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255, 226, 201, 0.10);
+  color: rgba(255, 226, 201, 0.65);
+  font-family: @font-mono;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  &.is-liked {
+    color: @orange;
+    background: rgba(255, 106, 0, 0.18);
+  }
+}
+
+.acg-btn--like {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  &.is-liked {
+    background: @orange;
+    color: @ink;
+    border-color: @orange;
+  }
+}
+
+// Like overlay on grid tile
+.acg-wall-tile__cover-wrap {
+  position: relative;
+}
+
+.acg-wall-tile__like {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 7px;
+  background: rgba(10, 10, 10, 0.78);
+  color: @light;
+  font-family: @font-mono;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  border-radius: 999px;
+  backdrop-filter: blur(2px);
+}
+
+// ===== Play button (result phase) =====
+
+.acg-play {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px 16px;
+  background: @orange;
+  color: @ink;
+  border: none;
+  font-family: @font-grotesque;
+  cursor: pointer;
+  transition: transform 120ms ease, background 160ms ease;
+  &:active { transform: translateY(2px); }
+  &.is-playing {
+    background: @ink;
+    color: @orange;
+    box-shadow: inset 0 0 0 1.5px @orange;
+  }
+}
+
+.acg-play__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.acg-play__label {
+  font-weight: 900;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  text-transform: capitalize;
+  margin-right: auto;
+}
+
+.acg-play__detail {
+  font-family: @font-mono;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 50%;
+}
+
+// ===== Vinyl-credit row =====
+
+.acg-vinyl-credit {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 8px;
+  font-family: @font-grotesque;
+}
+
+.acg-vinyl-credit__label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 226, 201, 0.5);
+  font-weight: 700;
+}
+
+.acg-vinyl-credit__value {
+  font-family: @font-grotesque;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  color: @orange;
 }
 
 .acg-cover-panel__caption {
-  position: absolute;
-  bottom: 60px;
-  left: 0;
-  right: 0;
+  position: relative;
   text-align: center;
   font-family: @font-grotesque;
   font-size: 11px;
@@ -551,55 +784,674 @@
   font-size: 12px;
 }
 
-// Vinyl visual reused inside the cover panel.
-.acg-cover-vinyl {
+// ─── Vinyl shared shell (both variants) ───
+.acg-vinyl {
   position: relative;
-  width: 56%;
-  aspect-ratio: 1 / 1;
-  border-radius: 50%;
-  background:
-    repeating-radial-gradient(circle at center,
-      #060503 0px, #060503 1.4px, #181410 1.6px, #181410 3px),
-    radial-gradient(circle at center, #2a221b 0%, #060503 70%);
+  height: 220px;
+  width: 220px;
+  flex-shrink: 0;
   &.is-spinning { animation: acg-vinyl-spin 3.6s linear infinite; }
 }
 
-.acg-cover-vinyl__grooves {
-  position: absolute;
-  inset: 8%;
-  border-radius: 50%;
-  box-shadow: inset 0 0 22px rgba(0,0,0,0.85);
+// ─── Variant A: Bauhaus / instruction-manual ───
+.acg-vinyl__svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
-.acg-cover-vinyl__label {
+// ─── Variant B: Realistic LP render — full color + finish system ───
+//
+// CSS custom props per color modifier. Per-finish modifier tweaks alpha
+// and adds marble swirl. Outer wrapper holds the static drop shadow +
+// specular highlight; inner spinner rotates with the disc + label.
+
+.acg-vinyl-real {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  // Defaults overridden by --color modifier classes.
+  --groove-dark:  #07060a;
+  --groove-light: #1a1612;
+  --disc-tint:    #3a2e22;
+  --disc-deep:    #100c08;
+  --rim-stroke:   rgba(255, 226, 201, 0.18);
+  --label-bg:     #FF6A00;
+  --label-ring:   rgba(10, 10, 10, 0.45);
+  --label-text:   #0a0a0a;
+  --label-soft:   rgba(10, 10, 10, 0.55);
+  --opacity:      1;
+  --marble:       transparent;
+  // Splatter palette — secondary accents used by patterned finishes.
+  --splat-a:      rgba(255, 226, 201, 0.85);
+  --splat-b:      rgba(255, 226, 201, 0.55);
+  --splat-c:      rgba(255, 226, 201, 0.4);
+}
+
+// ─── Colors ───────────────────────────────────────────────────────────
+
+.acg-vinyl-real--black {
+  --groove-dark:  #07060a;
+  --groove-light: #1a1612;
+  --disc-tint:    #2a221b;
+  --disc-deep:    #08070a;
+  --rim-stroke:   rgba(255, 226, 201, 0.18);
+  --label-bg:     #FF6A00;
+  --label-text:   #0a0a0a;
+  --label-soft:   rgba(10, 10, 10, 0.6);
+  --splat-a:      rgba(245, 235, 213, 0.85); // cream
+  --splat-b:      rgba(216, 64, 32, 0.75);   // red
+  --splat-c:      rgba(245, 235, 213, 0.55);
+}
+
+.acg-vinyl-real--orange {
+  --groove-dark:  #b04400;
+  --groove-light: #d05500;
+  --disc-tint:    #ff8a3a;
+  --disc-deep:    #7a2e00;
+  --rim-stroke:   rgba(255, 226, 201, 0.25);
+  --label-bg:     #0a0a0a;
+  --label-text:   #FF6A00;
+  --label-soft:   rgba(255, 106, 0, 0.7);
+  --splat-a:      rgba(10, 10, 10, 0.75);    // black
+  --splat-b:      rgba(216, 64, 32, 0.7);    // red
+  --splat-c:      rgba(245, 235, 213, 0.6);  // cream
+}
+
+.acg-vinyl-real--bone {
+  --groove-dark:  #c4b89c;
+  --groove-light: #e8dcc0;
+  --disc-tint:    #f4ead0;
+  --disc-deep:    #a89e84;
+  --rim-stroke:   rgba(80, 60, 40, 0.18);
+  --label-bg:     #5a2018;
+  --label-text:   #f5ebd5;
+  --label-soft:   rgba(245, 235, 213, 0.7);
+  --splat-a:      rgba(216, 64, 32, 0.78);    // red
+  --splat-b:      rgba(28, 90, 110, 0.7);     // teal
+  --splat-c:      rgba(255, 186, 78, 0.65);   // amber
+}
+
+.acg-vinyl-real--oxblood {
+  --groove-dark:  #320a10;
+  --groove-light: #5a181d;
+  --disc-tint:    #7a2228;
+  --disc-deep:    #1a0508;
+  --rim-stroke:   rgba(255, 226, 201, 0.18);
+  --label-bg:     #f5ebd5;
+  --label-text:   #5a181d;
+  --label-soft:   rgba(90, 24, 29, 0.7);
+  --splat-a:      rgba(245, 235, 213, 0.78);  // cream
+  --splat-b:      rgba(10, 10, 10, 0.75);     // black
+  --splat-c:      rgba(245, 235, 213, 0.5);
+}
+
+.acg-vinyl-real--cobalt {
+  --groove-dark:  #08123a;
+  --groove-light: #1a2c70;
+  --disc-tint:    #2545a0;
+  --disc-deep:    #050a26;
+  --rim-stroke:   rgba(255, 226, 201, 0.20);
+  --label-bg:     #f5ebd5;
+  --label-text:   #08123a;
+  --label-soft:   rgba(8, 18, 58, 0.7);
+  --splat-a:      rgba(245, 235, 213, 0.78);  // cream
+  --splat-b:      rgba(255, 255, 255, 0.65);  // white
+  --splat-c:      rgba(10, 10, 10, 0.6);      // black
+}
+
+.acg-vinyl-real--emerald {
+  --groove-dark:  #052012;
+  --groove-light: #0d4028;
+  --disc-tint:    #1a6038;
+  --disc-deep:    #021a0c;
+  --rim-stroke:   rgba(255, 226, 201, 0.20);
+  --label-bg:     #f5ebd5;
+  --label-text:   #052012;
+  --label-soft:   rgba(5, 32, 18, 0.7);
+  --splat-a:      rgba(255, 222, 88, 0.78);   // yellow
+  --splat-b:      rgba(245, 235, 213, 0.65);  // cream
+  --splat-c:      rgba(10, 10, 10, 0.55);     // black
+}
+
+.acg-vinyl-real--fuchsia {
+  --groove-dark:  #5a0a3a;
+  --groove-light: #8e1860;
+  --disc-tint:    #c02888;
+  --disc-deep:    #2a0218;
+  --rim-stroke:   rgba(255, 226, 201, 0.22);
+  --label-bg:     #f5ebd5;
+  --label-text:   #5a0a3a;
+  --label-soft:   rgba(90, 10, 58, 0.7);
+  --splat-a:      rgba(245, 235, 213, 0.78);  // cream
+  --splat-b:      rgba(10, 10, 10, 0.65);     // black
+  --splat-c:      rgba(255, 186, 78, 0.6);    // amber accent
+}
+
+.acg-vinyl-real--amber {
+  --groove-dark:  #6a3800;
+  --groove-light: #9c5008;
+  --disc-tint:    #d6841c;
+  --disc-deep:    #3a1d00;
+  --rim-stroke:   rgba(255, 226, 201, 0.22);
+  --label-bg:     #1a0a02;
+  --label-text:   #ffba4e;
+  --label-soft:   rgba(255, 186, 78, 0.7);
+  --splat-a:      rgba(216, 64, 32, 0.78);    // red
+  --splat-b:      rgba(10, 10, 10, 0.7);      // black
+  --splat-c:      rgba(245, 235, 213, 0.55);
+}
+
+.acg-vinyl-real--frosted {
+  --groove-dark:  #a8b0b8;
+  --groove-light: #d8dee5;
+  --disc-tint:    #eef0f3;
+  --disc-deep:    #8a929a;
+  --rim-stroke:   rgba(255, 255, 255, 0.4);
+  --label-bg:     #f5ebd5;
+  --label-text:   #5a181d;
+  --label-soft:   rgba(60, 60, 60, 0.7);
+  --splat-a:      rgba(216, 64, 32, 0.75);    // red
+  --splat-b:      rgba(28, 90, 110, 0.7);     // teal-blue
+  --splat-c:      rgba(255, 222, 88, 0.7);    // yellow
+}
+
+.acg-vinyl-real--violet {
+  --groove-dark:  #2a0a4e;
+  --groove-light: #4a1488;
+  --disc-tint:    #6b22b8;
+  --disc-deep:    #15042a;
+  --rim-stroke:   rgba(255, 226, 201, 0.22);
+  --label-bg:     #f5ebd5;
+  --label-text:   #2a0a4e;
+  --label-soft:   rgba(42, 10, 78, 0.7);
+  --splat-a:      rgba(245, 235, 213, 0.78);  // cream
+  --splat-b:      rgba(10, 10, 10, 0.65);     // black
+  --splat-c:      rgba(255, 100, 180, 0.6);   // pink
+}
+
+.acg-vinyl-real--mint {
+  --groove-dark:  #4a8a7a;
+  --groove-light: #7fc4b0;
+  --disc-tint:    #9bd9c8;
+  --disc-deep:    #2d6253;
+  --rim-stroke:   rgba(60, 80, 70, 0.3);
+  --label-bg:     #1a2820;
+  --label-text:   #9bd9c8;
+  --label-soft:   rgba(155, 217, 200, 0.7);
+  --splat-a:      rgba(10, 10, 10, 0.7);      // black
+  --splat-b:      rgba(245, 235, 213, 0.7);   // cream
+  --splat-c:      rgba(216, 64, 32, 0.5);     // red accent
+}
+
+// ─── Finishes ─────────────────────────────────────────────────────────
+
+.acg-vinyl-real--translucent {
+  --opacity: 0.88;
+}
+
+.acg-vinyl-real--marbled {
+  // Real marbled vinyl — swirly veins of cream wash through the base color.
+  // Layered conic + radial gradients fake a "two paints stirred once" pattern.
+  --marble:
+    radial-gradient(ellipse 60px 80px at 30% 35%, rgba(255, 226, 201, 0.35), transparent 70%),
+    radial-gradient(ellipse 70px 50px at 70% 60%, rgba(255, 226, 201, 0.3), transparent 70%),
+    radial-gradient(ellipse 40px 90px at 60% 25%, rgba(255, 226, 201, 0.28), transparent 70%),
+    radial-gradient(ellipse 90px 35px at 25% 75%, rgba(255, 226, 201, 0.25), transparent 70%),
+    radial-gradient(ellipse 30px 60px at 80% 80%, rgba(255, 226, 201, 0.3), transparent 70%),
+    conic-gradient(from 18deg,
+      transparent 0deg,
+      rgba(255, 226, 201, 0.20) 40deg,
+      transparent 80deg,
+      rgba(255, 226, 201, 0.14) 150deg,
+      transparent 220deg,
+      rgba(255, 226, 201, 0.18) 290deg,
+      transparent 360deg);
+}
+
+.acg-vinyl-real--splatter {
+  // Real-vinyl splatter: dense, varied blob sizes, mix of round + wispy
+  // ellipses, multi-color (per-color --splat-a/b/c accents). Distribution
+  // is biased outward, like centrifugal paint throw during pressing.
+  --marble:
+    /* Large primary blobs (--splat-a, the dominant accent) */
+    radial-gradient(ellipse 14px 9px at 18% 22%, var(--splat-a), transparent 100%),
+    radial-gradient(ellipse 11px 14px at 76% 18%, var(--splat-a), transparent 100%),
+    radial-gradient(ellipse 16px 8px at 32% 78%, var(--splat-a), transparent 100%),
+    radial-gradient(ellipse 9px 13px at 82% 70%, var(--splat-a), transparent 100%),
+    radial-gradient(ellipse 12px 11px at 52% 12%, var(--splat-a), transparent 100%),
+    radial-gradient(ellipse 10px 14px at 12% 56%, var(--splat-a), transparent 100%),
+    /* Large secondary blobs (--splat-b) */
+    radial-gradient(ellipse 13px 8px at 88% 44%, var(--splat-b), transparent 100%),
+    radial-gradient(ellipse 8px 12px at 48% 88%, var(--splat-b), transparent 100%),
+    radial-gradient(ellipse 12px 10px at 64% 48%, var(--splat-b), transparent 100%),
+    radial-gradient(ellipse 9px 11px at 22% 38%, var(--splat-b), transparent 100%),
+    /* Medium accent blobs (--splat-c) */
+    radial-gradient(ellipse 7px 9px at 56% 36%, var(--splat-c), transparent 100%),
+    radial-gradient(ellipse 8px 6px at 36% 62%, var(--splat-c), transparent 100%),
+    radial-gradient(ellipse 6px 8px at 78% 84%, var(--splat-c), transparent 100%),
+    /* Medium spatter — alternating colors */
+    radial-gradient(circle 6px at 38% 34%, var(--splat-a), transparent 100%),
+    radial-gradient(circle 5px at 62% 38%, var(--splat-b), transparent 100%),
+    radial-gradient(circle 5px at 24% 44%, var(--splat-a), transparent 100%),
+    radial-gradient(circle 6px at 70% 56%, var(--splat-c), transparent 100%),
+    radial-gradient(circle 4px at 44% 64%, var(--splat-b), transparent 100%),
+    radial-gradient(circle 5px at 58% 70%, var(--splat-a), transparent 100%),
+    /* Wispy elongated drips */
+    radial-gradient(ellipse 3px 7px at 28% 28%, var(--splat-a), transparent 100%),
+    radial-gradient(ellipse 7px 3px at 66% 76%, var(--splat-b), transparent 100%),
+    radial-gradient(ellipse 3px 8px at 84% 32%, var(--splat-a), transparent 100%),
+    radial-gradient(ellipse 6px 3px at 18% 76%, var(--splat-c), transparent 100%),
+    radial-gradient(ellipse 2px 6px at 70% 22%, var(--splat-b), transparent 100%),
+    radial-gradient(ellipse 5px 2px at 40% 80%, var(--splat-a), transparent 100%),
+    /* Fine spray — tiny pinprick dots */
+    radial-gradient(circle 1.5px at 16% 38%, var(--splat-a), transparent 100%),
+    radial-gradient(circle 1.5px at 92% 22%, var(--splat-b), transparent 100%),
+    radial-gradient(circle 1.5px at 8% 84%, var(--splat-a), transparent 100%),
+    radial-gradient(circle 1.5px at 90% 88%, var(--splat-c), transparent 100%),
+    radial-gradient(circle 1.5px at 50% 48%, var(--splat-b), transparent 100%),
+    radial-gradient(circle 1.5px at 74% 26%, var(--splat-a), transparent 100%),
+    radial-gradient(circle 1.5px at 36% 92%, var(--splat-b), transparent 100%),
+    radial-gradient(circle 1.5px at 30% 8%, var(--splat-a), transparent 100%),
+    radial-gradient(circle 1.5px at 78% 92%, var(--splat-c), transparent 100%),
+    radial-gradient(circle 1.5px at 4% 28%, var(--splat-a), transparent 100%),
+    radial-gradient(circle 1.5px at 96% 64%, var(--splat-b), transparent 100%);
+}
+
+// Half-split: two compounds injected during pressing. The seam is
+// organic — cream blobs bleed into the colored half and vice versa,
+// like a real "split-color" pressing rather than a hard CSS line.
+.acg-vinyl-real--half {
+  --marble:
+    /* Cream bleeds INTO the colored (left) half — irregular blobs */
+    radial-gradient(ellipse 40px 55px at 38% 12%, var(--splat-a, rgba(245, 235, 213, 0.7)) 0%, transparent 65%),
+    radial-gradient(ellipse 32px 70px at 48% 32%, var(--splat-a, rgba(245, 235, 213, 0.7)) 0%, transparent 60%),
+    radial-gradient(ellipse 36px 50px at 35% 55%, var(--splat-a, rgba(245, 235, 213, 0.7)) 0%, transparent 60%),
+    radial-gradient(ellipse 28px 60px at 46% 78%, var(--splat-a, rgba(245, 235, 213, 0.7)) 0%, transparent 60%),
+    radial-gradient(ellipse 30px 45px at 40% 92%, var(--splat-a, rgba(245, 235, 213, 0.7)) 0%, transparent 60%),
+    /* Colored compound bleeds back INTO the cream (right) half */
+    radial-gradient(ellipse 25px 50px at 60% 18%, var(--disc-deep) 0%, transparent 55%),
+    radial-gradient(ellipse 32px 40px at 70% 48%, var(--disc-deep) 0%, transparent 55%),
+    radial-gradient(ellipse 22px 55px at 62% 70%, var(--disc-deep) 0%, transparent 55%),
+    radial-gradient(ellipse 28px 45px at 75% 88%, var(--disc-deep) 0%, transparent 55%),
+    /* Right half base cream wash — covers grooves on that side */
+    linear-gradient(90deg,
+      transparent 0%, transparent 52%,
+      rgba(245, 235, 213, 0.92) 56%, rgba(245, 235, 213, 0.92) 100%);
+}
+
+// Swirl: tight conic gradient with multiple bright bands at angles, like
+// a hand-mixed two-color pour.
+.acg-vinyl-real--swirl {
+  --marble:
+    conic-gradient(from 0deg,
+      rgba(255, 226, 201, 0.5) 0deg,
+      transparent 30deg,
+      rgba(255, 226, 201, 0.5) 60deg,
+      transparent 90deg,
+      rgba(255, 226, 201, 0.5) 120deg,
+      transparent 150deg,
+      rgba(255, 226, 201, 0.5) 180deg,
+      transparent 210deg,
+      rgba(255, 226, 201, 0.5) 240deg,
+      transparent 270deg,
+      rgba(255, 226, 201, 0.5) 300deg,
+      transparent 330deg,
+      rgba(255, 226, 201, 0.5) 360deg);
+}
+
+// Stripes: 5-6 thick concentric color bands (like a Rainbow Records pressing).
+.acg-vinyl-real--stripes {
+  --marble:
+    radial-gradient(circle at center,
+      transparent 0%,
+      transparent 24%,
+      var(--splat-a) 25%,
+      var(--splat-a) 30%,
+      transparent 31%,
+      transparent 38%,
+      var(--splat-b) 39%,
+      var(--splat-b) 44%,
+      transparent 45%,
+      transparent 52%,
+      var(--splat-c) 53%,
+      var(--splat-c) 58%,
+      transparent 59%,
+      transparent 66%,
+      var(--splat-a) 67%,
+      var(--splat-a) 72%,
+      transparent 73%);
+}
+
+// Glitter: very fine dense sparkle dust across the whole disc.
+.acg-vinyl-real--glitter {
+  --marble:
+    radial-gradient(circle 0.8px at 12% 18%, rgba(255, 255, 255, 0.9), transparent 100%),
+    radial-gradient(circle 1px at 24% 12%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(circle 0.8px at 38% 22%, rgba(255, 255, 255, 0.9), transparent 100%),
+    radial-gradient(circle 1px at 52% 14%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(circle 0.8px at 66% 18%, rgba(255, 255, 255, 0.9), transparent 100%),
+    radial-gradient(circle 1px at 78% 12%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(circle 0.8px at 92% 22%, rgba(255, 255, 255, 0.9), transparent 100%),
+    radial-gradient(circle 1px at 6% 32%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(circle 0.8px at 20% 38%, rgba(255, 255, 255, 0.9), transparent 100%),
+    radial-gradient(circle 1px at 34% 34%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(circle 0.8px at 46% 38%, rgba(255, 255, 255, 0.9), transparent 100%),
+    radial-gradient(circle 1px at 60% 32%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(circle 0.8px at 74% 38%, rgba(255, 255, 255, 0.9), transparent 100%),
+    radial-gradient(circle 1px at 86% 36%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(circle 0.8px at 14% 52%, rgba(255, 255, 255, 0.9), transparent 100%),
+    radial-gradient(circle 1px at 28% 56%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(circle 0.8px at 42% 52%, rgba(255, 255, 255, 0.9), transparent 100%),
+    radial-gradient(circle 1px at 56% 54%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(circle 0.8px at 70% 50%, rgba(255, 255, 255, 0.9), transparent 100%),
+    radial-gradient(circle 1px at 84% 56%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(circle 1px at 8% 68%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(circle 0.8px at 22% 72%, rgba(255, 255, 255, 0.9), transparent 100%),
+    radial-gradient(circle 1px at 36% 66%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(circle 0.8px at 50% 74%, rgba(255, 255, 255, 0.9), transparent 100%),
+    radial-gradient(circle 1px at 64% 68%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(circle 0.8px at 78% 72%, rgba(255, 255, 255, 0.9), transparent 100%),
+    radial-gradient(circle 1px at 92% 66%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(circle 1px at 16% 86%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(circle 0.8px at 30% 92%, rgba(255, 255, 255, 0.9), transparent 100%),
+    radial-gradient(circle 1px at 44% 86%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(circle 0.8px at 58% 90%, rgba(255, 255, 255, 0.9), transparent 100%),
+    radial-gradient(circle 1px at 72% 84%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(circle 0.8px at 86% 92%, rgba(255, 255, 255, 0.9), transparent 100%);
+}
+
+// Drip: paint dripping outward from the spindle in long radial streaks.
+.acg-vinyl-real--drip {
+  --marble:
+    conic-gradient(from 0deg,
+      transparent 0deg,
+      var(--splat-a) 4deg,
+      transparent 12deg,
+      transparent 38deg,
+      var(--splat-a) 42deg,
+      transparent 50deg,
+      transparent 78deg,
+      var(--splat-b) 82deg,
+      transparent 90deg,
+      transparent 118deg,
+      var(--splat-a) 122deg,
+      transparent 130deg,
+      transparent 158deg,
+      var(--splat-c) 162deg,
+      transparent 170deg,
+      transparent 198deg,
+      var(--splat-a) 202deg,
+      transparent 210deg,
+      transparent 238deg,
+      var(--splat-b) 242deg,
+      transparent 250deg,
+      transparent 278deg,
+      var(--splat-a) 282deg,
+      transparent 290deg,
+      transparent 318deg,
+      var(--splat-c) 322deg,
+      transparent 330deg,
+      transparent 358deg);
+}
+
+// Flame: printed graphic flame on one side of the disc.
+.acg-vinyl-real--flame {
+  --marble:
+    radial-gradient(ellipse 50px 30px at 25% 50%, var(--splat-a) 0%, transparent 70%),
+    radial-gradient(ellipse 30px 22px at 38% 38%, var(--splat-a) 0%, transparent 70%),
+    radial-gradient(ellipse 32px 24px at 36% 62%, var(--splat-a) 0%, transparent 70%),
+    radial-gradient(ellipse 22px 16px at 50% 30%, var(--splat-b) 0%, transparent 70%),
+    radial-gradient(ellipse 22px 18px at 50% 70%, var(--splat-b) 0%, transparent 70%),
+    radial-gradient(ellipse 16px 14px at 60% 45%, var(--splat-b) 0%, transparent 70%),
+    radial-gradient(ellipse 16px 12px at 60% 55%, var(--splat-b) 0%, transparent 70%);
+}
+
+// Galaxy: dark base + dense pinprick sparkles like distant stars.
+.acg-vinyl-real--galaxy {
+  --marble:
+    radial-gradient(circle 1px at 15% 12%, rgba(255, 255, 255, 0.95), transparent 100%),
+    radial-gradient(circle 1.5px at 32% 19%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(circle 1px at 48% 8%,  rgba(255, 255, 255, 0.9), transparent 100%),
+    radial-gradient(circle 1px at 62% 22%, rgba(255, 255, 255, 0.95), transparent 100%),
+    radial-gradient(circle 2px at 78% 14%, rgba(255, 255, 255, 0.8), transparent 100%),
+    radial-gradient(circle 1px at 88% 28%, rgba(255, 255, 255, 0.9), transparent 100%),
+    radial-gradient(circle 1.5px at 11% 36%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(circle 1px at 24% 48%, rgba(255, 255, 255, 0.95), transparent 100%),
+    radial-gradient(circle 1px at 38% 62%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(circle 1.5px at 54% 56%, rgba(255, 255, 255, 0.9), transparent 100%),
+    radial-gradient(circle 1px at 66% 70%, rgba(255, 255, 255, 0.95), transparent 100%),
+    radial-gradient(circle 2px at 84% 64%, rgba(255, 255, 255, 0.8), transparent 100%),
+    radial-gradient(circle 1px at 18% 76%, rgba(255, 255, 255, 0.9), transparent 100%),
+    radial-gradient(circle 1px at 36% 88%, rgba(255, 255, 255, 0.95), transparent 100%),
+    radial-gradient(circle 1.5px at 52% 82%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(circle 1px at 72% 84%, rgba(255, 255, 255, 0.9), transparent 100%),
+    radial-gradient(circle 1.5px at 86% 92%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(circle 1px at 6% 18%,  rgba(255, 255, 255, 0.7), transparent 100%),
+    radial-gradient(circle 1px at 94% 44%, rgba(255, 255, 255, 0.7), transparent 100%),
+    radial-gradient(circle 1px at 44% 32%, rgba(255, 255, 255, 0.6), transparent 100%);
+}
+
+// ─── Disc itself ──────────────────────────────────────────────────────
+
+.acg-vinyl-real__shadow {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 100%,
+    rgba(0, 0, 0, 0.55) 0%, transparent 70%);
+  transform: translateY(12%) scale(0.96);
+  filter: blur(14px);
+  z-index: 0;
+}
+
+.acg-vinyl-real__spinner {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  &.is-spinning {
+    animation: acg-vinyl-spin 3.6s linear infinite;
+  }
+}
+
+.acg-vinyl-real__disc {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  opacity: var(--opacity);
+  background:
+    // Marbled swirl (transparent on opaque finishes)
+    var(--marble),
+    // Bright outer rim band — the polished disc edge that catches light
+    radial-gradient(circle at 50% 50%,
+      transparent 48.5%,
+      rgba(255, 226, 201, 0.22) 49.2%,
+      rgba(255, 226, 201, 0.08) 49.8%,
+      transparent 50%),
+    // Tight repeating grooves
+    repeating-radial-gradient(circle at center,
+      var(--groove-dark) 0px,
+      var(--groove-dark) 1.1px,
+      var(--groove-light) 1.3px,
+      var(--groove-light) 2.6px),
+    // Warm-cool depth gradient
+    radial-gradient(circle at 35% 30%,
+      var(--disc-tint) 0%,
+      var(--disc-deep) 80%);
+  box-shadow:
+    inset 0 0 36px rgba(0, 0, 0, 0.75),
+    inset 0 0 8px rgba(255, 226, 201, 0.06);
+}
+
+.acg-vinyl-real__rim {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  // Crisp 1px outer bevel.
+  box-shadow:
+    inset 0 0 0 1px var(--rim-stroke),
+    0 0 0 0.5px rgba(0, 0, 0, 0.5);
+}
+
+.acg-vinyl-real__label {
   position: absolute;
   inset: 0;
   margin: auto;
-  width: 38%;
-  height: 38%;
+  width: 40%;
+  height: 40%;
   border-radius: 50%;
-  background: @orange;
+  background:
+    radial-gradient(circle at 35% 30%,
+      rgba(255, 255, 255, 0.16) 0%,
+      transparent 60%),
+    var(--label-bg);
+  box-shadow:
+    inset 0 0 8px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(0, 0, 0, 0.35);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 1px;
+  padding-top: 1px;
 }
 
-.acg-cover-vinyl__label-text {
+.acg-vinyl-real__label-brand {
+  font-family: @font-grotesque;
+  font-weight: 800;
+  font-size: 7px;
+  letter-spacing: 0.14em;
+  color: var(--label-soft);
+  text-transform: uppercase;
+}
+
+.acg-vinyl-real__label-cat {
   font-family: @font-grotesque;
   font-weight: 900;
-  font-size: 22px;
-  color: @ink;
-  letter-spacing: -0.04em;
+  font-size: 11px;
+  letter-spacing: -0.005em;
+  color: var(--label-text);
+  line-height: 1;
 }
 
-.acg-cover-vinyl__spindle {
+.acg-vinyl-real__label-side {
+  font-family: @font-mono;
+  font-size: 5.5px;
+  letter-spacing: 0.06em;
+  color: var(--label-soft);
+  font-weight: 700;
+}
+
+// Blank unprinted paper label — used in input preview state, before the
+// album's identity is committed to print.
+.acg-vinyl-real__label--blank {
+  background:
+    radial-gradient(circle at 35% 30%,
+      rgba(255, 255, 255, 0.2) 0%,
+      transparent 60%),
+    #f5ebd5;
+}
+
+// Logo label — center is the AlterU SVG mark (loaded as a CSS mask) so it
+// can be re-tinted to var(--label-text), guaranteeing contrast against
+// any label-bg color.
+.acg-vinyl-real__label--logo {
+  flex-direction: column;
+  gap: 1px;
+  padding: 0;
+  justify-content: center;
+}
+.acg-vinyl-real__label-mark {
+  display: block;
+  width: 64%;
+  aspect-ratio: 1 / 1;
+  background-color: var(--label-text);
+  -webkit-mask: url('/album-cover-generator/alteru.svg') center / contain no-repeat;
+          mask: url('/album-cover-generator/alteru.svg') center / contain no-repeat;
+}
+.acg-vinyl-real__label-cat--logo {
+  font-size: 6.5px;
+  letter-spacing: 0.08em;
+  margin-top: -1px;
+}
+
+.acg-vinyl-real__inner-stripe {
   position: absolute;
   inset: 0;
   margin: auto;
-  width: 5%;
-  height: 5%;
+  width: 14%;
+  height: 14%;
+  border-radius: 50%;
+  border: 0.5px solid rgba(0, 0, 0, 0.35);
+}
+
+.acg-vinyl-real__spindle {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 4%;
+  height: 4%;
   border-radius: 50%;
   background: @ink;
+  box-shadow: inset 0 0 2px rgba(255, 226, 201, 0.2);
+}
+
+// ─── Stationary specular highlight ───
+//
+// Conic-gradient with two soft "specular zones" that don't rotate with
+// the disc, so when the spinner spins, the grooves catch light at fixed
+// angles in space — closer to how a real LP behaves.
+
+.acg-vinyl-real__highlight {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2;
+  // Two stacked layers: a soft conic for the all-around catch-light
+  // (subtle), plus a crisper diagonal sweep that simulates a fixed
+  // overhead light bouncing off the grooves. Stays anchored in space
+  // while the spinner rotates underneath.
+  background:
+    linear-gradient(135deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.06) 42%,
+      rgba(255, 255, 255, 0.20) 49%,
+      rgba(255, 255, 255, 0.28) 50%,
+      rgba(255, 255, 255, 0.18) 51%,
+      rgba(255, 255, 255, 0.06) 58%,
+      transparent 70%),
+    conic-gradient(from 90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.04) 8%,
+      rgba(255, 255, 255, 0.10) 18%,
+      rgba(255, 255, 255, 0.04) 28%,
+      transparent 50%,
+      rgba(255, 255, 255, 0.03) 70%,
+      rgba(255, 255, 255, 0.08) 80%,
+      transparent 100%);
+  mix-blend-mode: screen;
+}
+
+// ─── Insertion animation (one-shot on mount) ───
+
+.acg-vinyl-real.is-inserting {
+  animation: acg-vinyl-insert 720ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes acg-vinyl-insert {
+  0% {
+    transform: translateX(110%) rotate(-45deg) scale(0.92);
+    opacity: 0;
+  }
+  60% {
+    transform: translateX(0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
 }
 
 // ===== Process timeline (loading phase) =====
@@ -685,29 +1537,153 @@
   margin-top: -2px;
 }
 
-// Tiny stack-of-tickets pictogram.
-.acg-archive-stack {
-  position: relative;
-  width: 34px;
-  height: 22px;
+// Record-crate pictogram (3 records standing in a crate, with label slat).
+.acg-archive-icon {
+  width: 30px;
+  height: 26px;
+  color: @orange;
   flex-shrink: 0;
-  span {
-    position: absolute;
-    border: 1.5px solid @orange;
-    background: transparent;
-    border-radius: 2px;
-    width: 26px;
-    height: 14px;
-    &:nth-child(1) { top: 0; left: 0; transform: rotate(-6deg); }
-    &:nth-child(2) { top: 4px; left: 4px; transform: rotate(3deg); }
-    &:nth-child(3) { top: 6px; left: 8px; background: @orange; border-color: @orange; }
+}
+
+// ─── Wall page nav (scope tabs + view switch) ───
+.acg-wall-nav {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 4px;
+  border-bottom: 1px solid rgba(255, 226, 201, 0.18);
+}
+
+// Scope tabs: primary navigation. Large text, underline marker.
+.acg-scope-tabs {
+  display: inline-flex;
+  gap: 18px;
+}
+
+.acg-scope-tab {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 8px 0 10px;
+  font-family: @font-grotesque;
+  font-weight: 900;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+  text-transform: capitalize;
+  color: rgba(255, 226, 201, 0.45);
+  cursor: pointer;
+  position: relative;
+  transition: color 140ms ease;
+  &.is-active {
+    color: @orange;
   }
+  &.is-active::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 3px;
+    background: @orange;
+  }
+}
+
+// View switch: secondary preference. Tiny icon-only toggle.
+.acg-view-switch {
+  display: inline-flex;
+  align-self: center;
+  border: 1px solid rgba(255, 226, 201, 0.22);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.acg-view-switch__btn {
+  appearance: none;
+  background: transparent;
+  color: rgba(255, 226, 201, 0.45);
+  border: none;
+  width: 30px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+  & + & {
+    border-left: 1px solid rgba(255, 226, 201, 0.18);
+  }
+  &.is-active {
+    background: @light;
+    color: @ink;
+  }
+}
+
+// Grid view — 2-column wall of cover tiles
+.acg-wall-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.acg-wall-tile {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  width: 100%;
+  cursor: pointer;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  &:active { transform: scale(0.98); }
+}
+
+.acg-wall-tile__cover {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+  background: @ink;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+}
+
+.acg-wall-tile__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 0 2px;
+}
+
+.acg-wall-tile__cat {
+  font-family: @font-mono;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: rgba(255, 226, 201, 0.5);
+  text-transform: uppercase;
+}
+
+.acg-wall-tile__band {
+  font-family: @font-grotesque;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: -0.01em;
+  color: @light;
+  text-transform: capitalize;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 // ===== Wall row — add a stub no. column on the left =====
 
 .acg-wall-row {
-  grid-template-columns: 38px 78px 1fr 18px !important;
+  grid-template-columns: 38px 130px 1fr 18px !important;
   gap: 12px !important;
 }
 
@@ -724,9 +1700,33 @@
   border-right: 1px dashed rgba(255, 226, 201, 0.2);
 }
 
+// Wall row's half-extracted vinyl display — same composition as result,
+// scaled to fit the row height.
+.acg-wall-row__display {
+  position: relative;
+  width: 130px;
+  height: 78px;
+}
+
+.acg-wall-row__vinyl {
+  position: absolute;
+  left: 58px;
+  top: 50%;
+  width: 72px;
+  height: 72px;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
 .acg-wall-row__cover {
+  position: absolute;
+  left: 0;
+  top: 0;
   width: 78px;
   height: 78px;
+  object-fit: cover;
+  z-index: 2;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
 }
 
 .acg-wall-row__sep {
@@ -871,6 +1871,142 @@
   &.acg-btn--ghost { background: transparent; }
 }
 
+// ===== Debug demos =====
+
+.acg-root--demo {
+  background: @bg;
+  overflow-y: auto;
+  display: block;
+}
+
+.acg-gallery {
+  padding: 32px 24px 80px;
+  max-width: 980px;
+  margin: 0 auto;
+  color: @ink;
+}
+
+.acg-gallery__head {
+  margin-bottom: 28px;
+  h1 {
+    margin: 0;
+    font-family: @font-grotesque;
+    font-weight: 900;
+    font-size: 32px;
+    letter-spacing: -0.025em;
+    color: @ink;
+    text-transform: uppercase;
+  }
+  p {
+    margin: 4px 0 0;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: rgba(10, 10, 10, 0.65);
+  }
+}
+
+.acg-gallery__grid {
+  border-collapse: collapse;
+  width: 100%;
+  background: @ink;
+  color: @light;
+  th, td {
+    padding: 12px;
+    border: 1px solid rgba(255, 226, 201, 0.18);
+    text-align: center;
+    vertical-align: middle;
+  }
+  thead th {
+    font-family: @font-grotesque;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255, 226, 201, 0.6);
+  }
+}
+
+.acg-gallery__row-label {
+  font-family: @font-grotesque;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 226, 201, 0.85);
+  text-align: right !important;
+  padding-right: 14px !important;
+}
+
+.acg-gallery__cell {
+  width: 100px;
+  height: 100px;
+  position: relative;
+  margin: 0 auto;
+}
+
+// Animation demo
+.acg-anim-demo {
+  padding: 32px 24px;
+  text-align: center;
+  color: @ink;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.acg-anim-demo__head {
+  margin-bottom: 36px;
+  h1 {
+    margin: 0;
+    font-family: @font-grotesque;
+    font-weight: 900;
+    font-size: 32px;
+    letter-spacing: -0.025em;
+    text-transform: uppercase;
+    color: @ink;
+  }
+  p {
+    margin: 6px 0 0;
+    font-family: @font-grotesque;
+    font-size: 13px;
+    color: rgba(10, 10, 10, 0.7);
+    font-weight: 600;
+  }
+}
+
+.acg-anim-demo__stage {
+  background: @ink;
+  width: min(80vw, 360px);
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+
+.acg-anim-demo__vinyl-slot {
+  width: 70%;
+  aspect-ratio: 1 / 1;
+  position: relative;
+  // Slow the insertion animation 4× so the choreography is readable.
+  .acg-vinyl-real.is-inserting {
+    animation-duration: 3000ms !important;
+  }
+}
+
+.acg-anim-demo__label {
+  font-family: @font-mono;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: rgba(10, 10, 10, 0.7);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 // Reveal animation for the result phase.
 .acg-reveal {
   opacity: 0;
@@ -881,20 +2017,11 @@
 
 // ===== Wall =====
 
-.acg-back-pill {
+.acg-back-btn {
   align-self: flex-start;
-  appearance: none;
-  background: transparent;
-  color: @light;
-  border: 1px solid rgba(255, 226, 201, 0.3);
-  border-radius: 999px;
-  padding: 6px 14px;
-  font-family: @font-grotesque;
-  font-weight: 700;
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   margin-top: -4px;
 }
 

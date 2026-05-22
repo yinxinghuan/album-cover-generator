@@ -2,9 +2,12 @@ import { useEffect, useState } from 'react';
 import Ticket from './Ticket';
 import CoverPlaceholder from './CoverPlaceholder';
 import { t } from '../i18n';
+import type { VinylDesign } from '../types';
 
 interface Props {
   stage: '' | 'naming' | 'pressing';
+  catalog: string;
+  vinyl: VinylDesign;
 }
 
 const STEP_KEYS = [
@@ -15,7 +18,7 @@ const STEP_KEYS = [
   'step_ship',
 ];
 
-export default function CoverLoading({ stage }: Props) {
+export default function CoverLoading({ stage, catalog, vinyl }: Props) {
   // Walk through the steps over time. Naming stage progresses through 1-2,
   // pressing stage progresses through 3-5. The motion is purely visual —
   // the real generation timing is non-deterministic.
@@ -34,10 +37,10 @@ export default function CoverLoading({ stage }: Props) {
   return (
     <Ticket
       topLabel={t('ticket_label_pressing')}
-      catalog="ALT-???"
+      catalog={catalog}
       footerHero={t('footer_hero_pressing')}
     >
-      <CoverPlaceholder catalog="ALT-???" pressing />
+      <CoverPlaceholder catalog={catalog} variant="pressing" design={vinyl} />
 
       <h1 className="acg-display acg-display--hero">{t('loading_status')}</h1>
       <p className="acg-deck">{t('loading_sub')}</p>

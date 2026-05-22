@@ -1,8 +1,10 @@
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import Ticket from './Ticket';
+import Arrow from './Arrow';
 import CoverPlaceholder from './CoverPlaceholder';
 import { t } from '../i18n';
 import { catalogNumber } from '../utils/catalog';
+import { vinylFor } from '../utils/vinyl';
 
 interface Props {
   onSubmit: (words: [string, string, string]) => void;
@@ -22,6 +24,14 @@ export default function InputForm({ onSubmit, pressed, hasFirstTouched }: Props)
   const cat = catalogNumber(pressed);
   const today = formatDate(new Date());
 
+  // Preview vinyl: once all three tracks are typed, roll a vinyl design
+  // from the words. Deterministic per word-set, so edits re-roll.
+  const ready = !!(w1.trim() && w2.trim() && w3.trim());
+  const previewVinyl = useMemo(() => {
+    if (!ready) return undefined;
+    return vinylFor(`${w1.trim()}|${w2.trim()}|${w3.trim()}`.toLowerCase());
+  }, [ready, w1, w2, w3]);
+
   const submit = () => {
     const a = w1.trim(), b = w2.trim(), c = w3.trim();
     if (!a || !b || !c) {
@@ -37,7 +47,11 @@ export default function InputForm({ onSubmit, pressed, hasFirstTouched }: Props)
 
   return (
     <Ticket topLabel={t('ticket_label_in')} catalog={cat} footerHero={t('footer_hero_in')}>
-      <CoverPlaceholder catalog={cat} />
+      <CoverPlaceholder
+        catalog={cat}
+        variant={ready ? 'preview' : 'empty'}
+        design={previewVinyl}
+      />
 
       <div className="acg-orderline">
         <span className="acg-orderline__label">{t('order_placed')}</span>
@@ -68,7 +82,7 @@ export default function InputForm({ onSubmit, pressed, hasFirstTouched }: Props)
         onPointerDown={submit}
       >
         {t('input_press')}
-        <span className="acg-press__arrow" aria-hidden>→</span>
+        <Arrow className="acg-press__arrow" size={26} />
       </button>
 
       <p className="acg-fineprint">{t('input_fineprint')}</p>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ACG Gallery</title>
+  <style>
+    :root {
+      --orange: #FF6A00;
+      --ink: #0a0a0a;
+      --cream: #FFE2C9;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #1a1310;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--cream);
+    }
+    header.page {
+      margin-bottom: 22px;
+      display: flex;
+      align-items: baseline;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    header.page h1 {
+      margin: 0;
+      font-size: 30px;
+      font-weight: 900;
+      letter-spacing: -0.025em;
+      color: var(--cream);
+    }
+    .sub {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255, 226, 201, 0.5);
+      font-weight: 700;
+    }
+    section.group {
+      margin-bottom: 36px;
+    }
+    section.group > h2 {
+      margin: 0 0 14px;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--orange);
+    }
+    .row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, 390px);
+      gap: 18px;
+    }
+    .frame {
+      background: var(--ink);
+      border: 1px solid rgba(255, 226, 201, 0.18);
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .frame__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px;
+      background: var(--ink);
+      border-bottom: 1px solid rgba(255, 226, 201, 0.18);
+    }
+    .frame__num {
+      font-family: ui-monospace, 'SF Mono', monospace;
+      font-size: 11px;
+      color: rgba(255, 226, 201, 0.6);
+      letter-spacing: 0.08em;
+    }
+    .frame__title {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--orange);
+      letter-spacing: -0.005em;
+      text-transform: uppercase;
+    }
+    .frame__chip {
+      font-family: ui-monospace, 'SF Mono', monospace;
+      font-size: 10px;
+      color: rgba(255, 226, 201, 0.4);
+      letter-spacing: 0.06em;
+    }
+    iframe {
+      width: 390px;
+      height: 844px;
+      border: none;
+      display: block;
+      background: var(--orange);
+    }
+    iframe.wide {
+      width: 100%;
+      height: 980px;
+    }
+    .wide-frame {
+      grid-column: 1 / -1;
+    }
+    footer.page {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255, 226, 201, 0.4);
+    }
+  </style>
+  <script>
+    // Fill the input form once iframe loads, so the "preview" frame shows
+    // the realistic colored vinyl state out of the box.
+    window.addEventListener('load', () => {
+      const previewFrame = document.getElementById('preview-frame');
+      if (!previewFrame) return;
+      previewFrame.addEventListener('load', () => {
+        try {
+          const doc = previewFrame.contentDocument;
+          if (!doc) return;
+          // Retry until inputs are mounted (React).
+          const tryFill = (attempts) => {
+            const inputs = doc.querySelectorAll('input.acg-track-in__field');
+            if (inputs.length !== 3 && attempts > 0) {
+              setTimeout(() => tryFill(attempts - 1), 100);
+              return;
+            }
+            const setter = Object.getOwnPropertyDescriptor(
+              previewFrame.contentWindow.HTMLInputElement.prototype, 'value'
+            ).set;
+            ['fire', 'glass', 'gold'].forEach((v, i) => {
+              setter.call(inputs[i], v);
+              inputs[i].dispatchEvent(new Event('input', { bubbles: true }));
+            });
+          };
+          tryFill(20);
+        } catch (e) { /* cross-origin shouldn't happen here */ }
+      });
+    });
+  </script>
+</head>
+<body>
+  <header class="page">
+    <h1>Album Cover Generator · Gallery</h1>
+    <span class="sub">all states · iPhone 14 viewport (390×844)</span>
+  </header>
+
+  <section class="group">
+    <h2>Game phases</h2>
+    <div class="row">
+      <div class="frame">
+        <div class="frame__head">
+          <span class="frame__num">01</span>
+          <span class="frame__title">Input · empty</span>
+          <span class="frame__chip">awaiting</span>
+        </div>
+        <iframe src="./?demo=input" loading="eager"></iframe>
+      </div>
+
+      <div class="frame">
+        <div class="frame__head">
+          <span class="frame__num">01b</span>
+          <span class="frame__title">Input · preview</span>
+          <span class="frame__chip">colored vinyl</span>
+        </div>
+        <iframe id="preview-frame" src="./?demo=input&prefill=1" loading="eager"></iframe>
+      </div>
+
+      <div class="frame">
+        <div class="frame__head">
+          <span class="frame__num">02</span>
+          <span class="frame__title">Loading</span>
+          <span class="frame__chip">orange · marbled</span>
+        </div>
+        <iframe src="./?demo=loading" loading="eager"></iframe>
+      </div>
+
+      <div class="frame">
+        <div class="frame__head">
+          <span class="frame__num">03</span>
+          <span class="frame__title">Result</span>
+          <span class="frame__chip">oxblood · translucent</span>
+        </div>
+        <iframe src="./?demo=result" loading="eager"></iframe>
+      </div>
+
+      <div class="frame">
+        <div class="frame__head">
+          <span class="frame__num">04</span>
+          <span class="frame__title">Wall · Archive</span>
+          <span class="frame__chip">6 designs on file</span>
+        </div>
+        <iframe src="./?demo=wall" loading="eager"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <section class="group">
+    <h2>Vinyl palette · 9 colors × 4 finishes</h2>
+    <div class="row">
+      <div class="frame wide-frame">
+        <div class="frame__head">
+          <span class="frame__num">05</span>
+          <span class="frame__title">Gallery</span>
+          <span class="frame__chip">36 variants</span>
+        </div>
+        <iframe class="wide" src="./?demo=gallery" loading="eager"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <section class="group">
+    <h2>Insertion animation</h2>
+    <div class="row">
+      <div class="frame">
+        <div class="frame__head">
+          <span class="frame__num">06</span>
+          <span class="frame__title">Anim · slow loop</span>
+          <span class="frame__chip">3000ms · cycles</span>
+        </div>
+        <iframe src="./?demo=anim" loading="eager"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <footer class="page">
+    each iframe scrolls independently · cmd-click titles to open standalone
+  </footer>
+</body>
+</html>

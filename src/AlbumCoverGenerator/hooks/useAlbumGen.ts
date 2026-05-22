@@ -3,7 +3,8 @@ import { useGenImage } from '@shared/runtime/useGenImage';
 import { coverPrompt, BAND_NAME_SYSTEM, TITLE_SYSTEM } from '../utils/prompts';
 import { randomBandName, defaultTitle } from '../utils/bandName';
 import { makeAlbum } from '../utils/album';
-import type { Album, CoverStyle } from '../types';
+import { MUSIC_GEN_SYSTEM, parseMusicSpec } from '../utils/music';
+import type { Album, CoverStyle, MusicSpec } from '../types';
 
 interface GenInput {
   words: [string, string, string];
@@ -63,7 +64,7 @@ export function useAlbumGen(): UseAlbumGen {
       const wordsLine = words.map(w => w.trim()).filter(Boolean).join(', ');
       const namingPrompt = `Three theme words: ${wordsLine}`;
 
-      const [bandName, title] = await Promise.all([
+      const [bandName, title, music] = await Promise.all([
         (async () => {
           try {
             return cleanLine(await chatOnce(BAND_NAME_SYSTEM, namingPrompt))
@@ -80,6 +81,15 @@ export function useAlbumGen(): UseAlbumGen {
             return defaultTitle(words);
           }
         })(),
+        // Third parallel call: music structure for this album.
+        (async (): Promise<MusicSpec> => {
+          try {
+            const musicPrompt = `Three theme words: ${wordsLine}\nCover style: ${style}`;
+            return parseMusicSpec(await chatOnce(MUSIC_GEN_SYSTEM, musicPrompt));
+          } catch {
+            return parseMusicSpec('');
+          }
+        })(),
       ]);
 
       setStage('pressing');
@@ -89,6 +99,7 @@ export function useAlbumGen(): UseAlbumGen {
           prompt: coverPrompt(style, words, title, bandName),
         });
         const album = makeAlbum({ words, title, bandName, style, imageUrl, catalog });
+        album.music = music;
         return album;
       } catch (e) {
         const err = e instanceof Error ? e : new Error(String(e));

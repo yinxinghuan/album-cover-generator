@@ -1,35 +1,51 @@
-// Calm placeholder cover panel used by the input + loading phases.
-// Same dimensions / chrome as the real cover (chip + cat pill), so the
-// composition stays consistent across all phases. The center has a small
-// vinyl. In loading mode it spins.
+// Cover panel placeholder shown by the input + loading phases.
+//
+// variant=empty    → label-less Bauhaus disc (no input yet)
+// variant=preview  → label-less colored realistic vinyl (input ready;
+//                     color rolls from the typed words, updates on edit)
+// variant=pressing → spinning realistic vinyl with label (loading)
+//
+// The chip + cat pill that exist on the result page's cover are NOT
+// rendered here — they duplicate the ticket header's chrome and only
+// belong on a real printed cover artifact.
 
 import { t } from '../i18n';
+import { BauhausVinyl, RealisticVinyl } from './Vinyl';
+import type { VinylDesign } from '../types';
 
 interface Props {
+  variant: 'empty' | 'preview' | 'pressing';
   catalog: string;
-  /** When true: vinyl spins, chip says "PRESSING NOW". */
-  pressing?: boolean;
+  /** Required for 'preview' + 'pressing'. */
+  design?: VinylDesign;
 }
 
-export default function CoverPlaceholder({ catalog, pressing = false }: Props) {
-  const chipKey = pressing ? 'cover_chip_pressing' : 'cover_chip_awaiting';
+export default function CoverPlaceholder({ variant, catalog, design }: Props) {
+  const captionKey =
+    variant === 'pressing' ? 'cover_caption_pressing'
+    : variant === 'preview' ? 'cover_caption_preview'
+    : 'cover_caption_awaiting';
+
   return (
     <div className="acg-cover-panel acg-cover-panel--placeholder">
-      <div className={`acg-cover-vinyl ${pressing ? 'is-spinning' : ''}`}>
-        <div className="acg-cover-vinyl__grooves" />
-        <div className="acg-cover-vinyl__label">
-          <span className="acg-cover-vinyl__label-text">A</span>
+      {variant === 'empty' && (
+        // Mount key tied to variant so the next mount of preview/pressing
+        // replays the insertion animation.
+        <div className="acg-vinyl" key="empty">
+          <BauhausVinyl labelStyle="blank" />
         </div>
-        <div className="acg-cover-vinyl__spindle" />
-      </div>
-      <span className="acg-cover-panel__chip">
-        <svg viewBox="0 0 18 12" width="14" height="10" aria-hidden>
-          <path d="M2 2h14v8h-3l-1.5-2H6.5L5 10H2z" fill="currentColor" />
-        </svg>
-        {t(chipKey)}
-      </span>
-      <span className="acg-cover-panel__cat">{catalog}</span>
-      <div className="acg-cover-panel__caption">{t(pressing ? 'cover_caption_pressing' : 'cover_caption_awaiting')}</div>
+      )}
+      {variant === 'preview' && design && (
+        <div className="acg-vinyl" key={`preview-${design.color}-${design.finish}`}>
+          <RealisticVinyl design={design} labelStyle="blank" inserting />
+        </div>
+      )}
+      {variant === 'pressing' && design && (
+        <div className="acg-vinyl" key="pressing">
+          <RealisticVinyl design={design} catalog={catalog} spinning inserting />
+        </div>
+      )}
+      <div className="acg-cover-panel__caption">{t(captionKey)}</div>
     </div>
   );
 }

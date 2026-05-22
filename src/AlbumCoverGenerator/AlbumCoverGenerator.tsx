@@ -5,10 +5,13 @@ import InputForm from './components/InputForm';
 import CoverLoading from './components/CoverLoading';
 import CoverResult from './components/CoverResult';
 import Wall from './components/Wall';
+import VinylGallery from './components/VinylGallery';
+import AnimDemo from './components/AnimDemo';
 import { useAlbumGen } from './hooks/useAlbumGen';
 import { useWall } from './hooks/useWall';
-import { pickStyle, prependAlbum } from './utils/album';
+import { pickStyle, prependAlbum, newAlbumId } from './utils/album';
 import { catalogNumber } from './utils/catalog';
+import { vinylFor } from './utils/vinyl';
 import { startAmbient, playNeedleDrop, playClick, playRevealChord } from './utils/audio';
 import { t } from './i18n';
 import type { Album, AlbumSave, Phase } from './types';
@@ -24,16 +27,25 @@ const DEMO_ALBUM: Album = {
   bandName: 'The Fading Stations',
   style: 'shoegaze',
   imageUrl: DEMO_SHOEGAZE,
+  catalog: 'ALT-024',
+  vinyl: { color: 'oxblood', finish: 'translucent' },
+  music: {
+    bpm: 78, key: 'F#m', chords: ['F#m', 'D', 'A', 'E'],
+    mood: 'wistful haze', pad: 'warm', bass: 'sub', drum: 'soft',
+  },
   createdAt: Date.now(),
 };
 
+// Force the demo to use the logo label so reviewers see that variant.
+DEMO_ALBUM.vinyl = { color: 'oxblood', finish: 'translucent', labelArt: 'logo' };
+
 const DEMO_WALL: Array<{ name: string; album: Album }> = [
-  { name: 'jenny',  album: { ...DEMO_ALBUM, id: 'a', title: 'Burnt Map',      bandName: 'Cheap Halo',   style: 'xerox',    imageUrl: DEMO_XEROX } },
-  { name: 'algram', album: { ...DEMO_ALBUM, id: 'b', title: 'Closer to Empty',bandName: 'Velvet Boy',   style: 'shoegaze', imageUrl: DEMO_SHOEGAZE } },
-  { name: 'jm·f',   album: { ...DEMO_ALBUM, id: 'c', title: 'Tape Hiss',      bandName: 'The Postcards',style: 'xerox',    imageUrl: DEMO_XEROX } },
-  { name: 'isaya',  album: { ...DEMO_ALBUM, id: 'd', title: 'Window Light',   bandName: 'Soft Coat',    style: 'shoegaze', imageUrl: DEMO_SHOEGAZE } },
-  { name: 'isabel', album: { ...DEMO_ALBUM, id: 'e', title: 'Quiet Hour',     bandName: 'Pale Field',   style: 'xerox',    imageUrl: DEMO_XEROX } },
-  { name: 'ghost',  album: { ...DEMO_ALBUM, id: 'f', title: 'Static',         bandName: 'Worn Hum',     style: 'shoegaze', imageUrl: DEMO_SHOEGAZE } },
+  { name: 'jenny',  album: { ...DEMO_ALBUM, id: 'a', catalog: 'ALT-001', title: 'Burnt Map',      bandName: 'Cheap Halo',   style: 'xerox',    imageUrl: DEMO_XEROX,    vinyl: { color: 'oxblood', finish: 'opaque' } } },
+  { name: 'algram', album: { ...DEMO_ALBUM, id: 'b', catalog: 'ALT-002', title: 'Closer to Empty',bandName: 'Velvet Boy',   style: 'shoegaze', imageUrl: DEMO_SHOEGAZE, vinyl: { color: 'cobalt',  finish: 'translucent' } } },
+  { name: 'jm·f',   album: { ...DEMO_ALBUM, id: 'c', catalog: 'ALT-003', title: 'Tape Hiss',      bandName: 'The Postcards',style: 'xerox',    imageUrl: DEMO_XEROX,    vinyl: { color: 'orange',  finish: 'marbled' } } },
+  { name: 'isaya',  album: { ...DEMO_ALBUM, id: 'd', catalog: 'ALT-004', title: 'Window Light',   bandName: 'Soft Coat',    style: 'shoegaze', imageUrl: DEMO_SHOEGAZE, vinyl: { color: 'bone',    finish: 'opaque' } } },
+  { name: 'isabel', album: { ...DEMO_ALBUM, id: 'e', catalog: 'ALT-005', title: 'Quiet Hour',     bandName: 'Pale Field',   style: 'xerox',    imageUrl: DEMO_XEROX,    vinyl: { color: 'black',   finish: 'opaque' } } },
+  { name: 'ghost',  album: { ...DEMO_ALBUM, id: 'f', catalog: 'ALT-006', title: 'Static',         bandName: 'Worn Hum',     style: 'shoegaze', imageUrl: DEMO_SHOEGAZE, vinyl: { color: 'orange',  finish: 'translucent' } } },
 ];
 
 export default function AlbumCoverGenerator() {
@@ -48,6 +60,7 @@ export default function AlbumCoverGenerator() {
 
   const [phase, setPhase] = useState<Phase>('input');
   const [current, setCurrent] = useState<Album | null>(null);
+  const [pending, setPending] = useState<{ catalog: string; vinyl: ReturnType<typeof vinylFor> } | null>(null);
   const [shareLabel, setShareLabel] = useState<string>('');
   const [hasFirstTouched, setHasFirstTouched] = useState(false);
 
@@ -55,7 +68,10 @@ export default function AlbumCoverGenerator() {
   useEffect(() => {
     if (!demo) return;
     if (demo === 'input') setPhase('input');
-    else if (demo === 'loading') setPhase('generating');
+    else if (demo === 'loading') {
+      setPending({ catalog: 'ALT-024', vinyl: { color: 'orange', finish: 'marbled' } });
+      setPhase('generating');
+    }
     else if (demo === 'result') {
       setCurrent(DEMO_ALBUM);
       setPhase('result');
@@ -86,30 +102,66 @@ export default function AlbumCoverGenerator() {
   // useGameSave to rehydrate (it doesn't update savedData on persist).
   const [localExtra, setLocalExtra] = useState<Album[]>([]);
   const pressed = (savedData?.albums?.length ?? 0) + localExtra.length;
+  // Combined own discography — locally pressed + cloud-rehydrated.
+  const albums: Album[] = [...localExtra, ...(savedData?.albums ?? [])];
+
+  // True when the user navigated to result via tapping a wall entry.
+  // Used to route the "back" gesture back to wall instead of input.
+  const [cameFromWall, setCameFromWall] = useState(false);
+
+  const handleViewFromWall = (album: Album) => {
+    playClick();
+    setCurrent(album);
+    setCameFromWall(true);
+    setPhase('result');
+  };
+
+  // ─── Likes ────────────────────────────────────────────────────────
+  const liked = new Set<string>(savedData?.liked ?? []);
+  const toggleLike = (albumId: string) => {
+    const next = new Set(liked);
+    if (next.has(albumId)) next.delete(albumId);
+    else next.add(albumId);
+    persist({ albums: savedData?.albums ?? [], liked: [...next] });
+  };
 
   // ---- Phase transitions ----
 
   const handleSubmit = async (words: [string, string, string]) => {
     playNeedleDrop();
+    // Pre-roll the vinyl design now so the loading phase can show the
+    // record being pressed in its final color. The album.id is forecast
+    // so the design persists onto the album record.
+    const catalog = catalogNumber(pressed);
+    const forecastId = newAlbumId();
+    const vinyl = vinylFor(forecastId);
+    setPending({ catalog, vinyl });
     setPhase('generating');
     try {
-      const catalog = catalogNumber(pressed);
-      const album = await albumGen.generate({ words, style: pickStyle(), catalog });
-      setCurrent(album);
+      const album = await albumGen.generate({
+        words, style: pickStyle(), catalog,
+      });
+      // Stamp the album with the pre-rolled identity so loading/result
+      // share the same vinyl.
+      const stamped: Album = { ...album, id: forecastId, vinyl };
+      setCurrent(stamped);
       setPhase('result');
       playRevealChord();
-      const nextAlbums = prependAlbum(savedData?.albums, album);
+      const nextAlbums = prependAlbum(savedData?.albums, stamped);
       persist({ albums: nextAlbums });
-      setLocalExtra(prev => [album, ...prev].slice(0, 12));
+      setLocalExtra(prev => [stamped, ...prev].slice(0, 12));
     } catch {
       // Surface a quick error then bounce back to input.
       setPhase('input');
+    } finally {
+      setPending(null);
     }
   };
 
   const handleNew = () => {
     playClick();
     setShareLabel('');
+    setCameFromWall(false);
     setPhase('input');
   };
 
@@ -146,6 +198,21 @@ export default function AlbumCoverGenerator() {
     : wall.entries;
   const wallLoaded = (demo === 'wall' || demo === 'poster') ? true : wall.loaded;
 
+  if (demo === 'gallery') {
+    return (
+      <div className="acg-root acg-root--demo">
+        <VinylGallery />
+      </div>
+    );
+  }
+  if (demo === 'anim') {
+    return (
+      <div className="acg-root acg-root--demo">
+        <AnimDemo />
+      </div>
+    );
+  }
+
   return (
     <div className="acg-root">
       <div className="acg-frame">
@@ -156,10 +223,15 @@ export default function AlbumCoverGenerator() {
             hasFirstTouched={hasFirstTouched}
           />
         )}
-        {phase === 'generating' && <CoverLoading stage={albumGen.stage} />}
+        {phase === 'generating' && pending && (
+          <CoverLoading stage={albumGen.stage} catalog={pending.catalog} vinyl={pending.vinyl} />
+        )}
         {phase === 'result' && current && (
           <CoverResult
             album={current}
+            viewMode={cameFromWall ? 'play' : 'release'}
+            liked={liked.has(current.id)}
+            onToggleLike={cameFromWall ? () => toggleLike(current.id) : undefined}
             onNew={handleNew}
             onWall={handleWall}
             onShare={isInAigram ? undefined : handleShare}
@@ -168,7 +240,14 @@ export default function AlbumCoverGenerator() {
           />
         )}
         {phase === 'wall' && (
-          <Wall entries={wallEntries} loaded={wallLoaded} onBack={handleBackFromWall} />
+          <Wall
+            community={wallEntries}
+            mine={albums}
+            loaded={wallLoaded}
+            liked={liked}
+            onBack={handleBackFromWall}
+            onView={handleViewFromWall}
+          />
         )}
       </div>
       {phase === 'input' && !hasFirstTouched && (
