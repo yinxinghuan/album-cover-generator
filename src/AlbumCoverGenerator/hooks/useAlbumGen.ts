@@ -118,6 +118,11 @@ Album title: ${title}`;
 
       try {
         const imageUrl = await genImg({ prompt: coverSpec.imagePrompt });
+        // Pre-download + decode the cover so it's warm in the browser
+        // cache by the time the result page mounts. Without this, the
+        // result frame appears with a black sleeve and the image only
+        // pops in once the <img> element triggers its own download.
+        await preloadImage(imageUrl);
         const album = makeAlbum({
           words,
           title,
@@ -151,4 +156,13 @@ function cleanLine(s: string): string {
     .replace(/^["“”'`\s]+|["“”'`.\s]+$/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function preloadImage(url: string): Promise<void> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve();
+    img.onerror = () => resolve();
+    img.src = url;
+  });
 }

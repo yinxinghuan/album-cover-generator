@@ -89,7 +89,7 @@ export default function CoverResult({
         footerHero={isPlayMode ? t('footer_hero_play') : t('footer_hero_done')}
       >
         <div
-          className={`acg-release-display acg-release-display--${displayMode}`}
+          className={`acg-release-display acg-release-display--${displayMode} ${isPlayMode ? '' : 'is-fresh'}`}
           onPointerDown={cycleDisplay}
           role="button"
           aria-label="cycle display"

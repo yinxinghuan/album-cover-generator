@@ -179,6 +179,11 @@ export default function AlbumCoverGenerator() {
       // Stamp the album with the pre-rolled identity so loading/result
       // share the same vinyl.
       const stamped: Album = { ...album, id: forecastId, vinyl };
+      // Brief settling beat — lets the pressing screen visually close
+      // out (ring at 100%, ambient still spinning) before the result
+      // takes over. Without this, the swap feels jarring after a
+      // ~60s pressing wait.
+      await new Promise((r) => setTimeout(r, 320));
       setCurrent(stamped);
       setPhase('result');
       playRevealChord();
