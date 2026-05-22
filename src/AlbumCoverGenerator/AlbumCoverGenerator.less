@@ -2,16 +2,21 @@
 //
 // A24-style ticket aesthetic. Flat color, scalloped die-cut card edges,
 // MASSIVE grotesque sans display type, tiny ALL-CAPS labels, photo as a
-// contained panel. Two-color discipline: orange + black, no grays.
+// contained panel. Two-color discipline: brand + black, no grays.
+//
+// PALETTE EXPLORATION: swapped orange → AlterU pink. Variable names
+// (@orange, @orange-hot, @orange-dim) preserved to minimize diff; values
+// shifted to pink family. The cream highlight (@light) lifted slightly
+// pinker so cream + pink + black still feels coherent.
 
-@bg:         #FF6A00;
+@bg:         #F5B1C7;
 @ink:        #0a0a0a;
 @ink-soft:   rgba(10, 10, 10, 0.6);
 @ink-faint:  rgba(10, 10, 10, 0.36);
-@orange:     #FF6A00;
-@orange-hot: #FF7B1A;
-@orange-dim: #E25700;
-@light:      #FFE2C9;
+@orange:     #F5B1C7;
+@orange-hot: #FFC4D6;
+@orange-dim: #D88BA3;
+@light:      #FFE8E4;
 
 @font-grotesque: 'Onest', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
 @font-mono:      ui-monospace, 'SF Mono', 'Courier New', monospace;
@@ -34,9 +39,11 @@
   max-width: 720px;
   height: 100%;
   padding: 14px 12px 14px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  &::-webkit-scrollbar { display: none; }
+  // Page-level scroll is OFF — the ticket itself is now viewport-tall
+  // and scrolls its body internally.
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 // ===== Ticket scaffold =====
@@ -47,23 +54,24 @@
 .acg-ticket {
   position: relative;
   width: 100%;
+  // Single-screen: ticket fills the visible frame (vertical flex item).
+  // flex: 1 1 0 + min-height: 0 lets the body inside shrink past its
+  // intrinsic content height so internal scroll kicks in.
+  flex: 1 1 0;
+  min-height: 0;
   background: @ink;
   color: @light;
   padding: 28px 22px 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
 
-  // Scalloped edges (top + bottom). r = puncture radius, c = how far the
-  // circle center is pushed PAST the edge into the ticket body.
-  //   c = 0   →  perfect half-circle bite (50% visible)
-  //   c > 0   →  more than half visible, deeper "tear" shape
-  // bite depth = r + c. strip is sized just larger than that.
+  // Scalloped edges (top + bottom).
   --r: 5px;
   --c: -1px;
   --period: 16px;
-  --bite: calc(var(--r) + var(--c));    // 10px deep
-  --strip: calc(var(--bite) + 2px);     // 12px tall
+  --bite: calc(var(--r) + var(--c));
+  --strip: calc(var(--bite) + 2px);
   -webkit-mask:
     radial-gradient(circle var(--r) at 50% var(--c),
       transparent 99%, #000 100%) 0 0   / var(--period) var(--strip) repeat-x,
@@ -85,10 +93,13 @@
 }
 
 .acg-ticket__head {
+  // Anchored at top — does not scroll with the body.
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 0 4px;
+  padding: 0 0 12px;
+  margin-bottom: 4px;
   border-bottom: 1px solid rgba(255, 226, 201, 0.18);
   font-family: @font-grotesque;
   font-size: 11px;
@@ -121,14 +132,37 @@
 }
 
 .acg-ticket__body {
+  // Internal scroll region — the only piece of the ticket that scrolls.
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: 8px 0;
+  // Hide scrollbar for the document-like feel.
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+  // Fade the top/bottom edges of scroll content so it doesn't snap
+  // against the header/footer.
+  -webkit-mask-image: linear-gradient(to bottom,
+    transparent 0,
+    #000 12px,
+    #000 calc(100% - 12px),
+    transparent 100%);
+          mask-image: linear-gradient(to bottom,
+    transparent 0,
+    #000 12px,
+    #000 calc(100% - 12px),
+    transparent 100%);
 }
 
 .acg-ticket__foot {
-  margin-top: 14px;
-  padding-top: 18px;
+  // Anchored at bottom — does not scroll with the body.
+  flex: 0 0 auto;
+  margin-top: 4px;
+  padding-top: 14px;
   border-top: 1px solid rgba(255, 226, 201, 0.18);
 }
 
@@ -2013,6 +2047,13 @@
 
 // Reveal animation for the result phase.
 .acg-reveal {
+  // This wraps the result Ticket. Must participate in the frame's
+  // column flex so the ticket inside it fills the viewport (otherwise
+  // flex grow/shrink lands on this wrapper, content-sized).
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   opacity: 0;
   transform: translateY(8px);
   transition: opacity 600ms ease, transform 600ms ease;
