@@ -2,17 +2,19 @@ import { useState, useMemo } from 'react';
 import Ticket from './Ticket';
 import Arrow from './Arrow';
 import { RealisticVinyl } from './Vinyl';
+import ReactionIcon from './ReactionIcons';
 import { t } from '../i18n';
 import { genreFor } from '../utils/catalog';
 import { vinylFor } from '../utils/vinyl';
-import { displayLikeCount } from '../utils/likes';
-import type { Album, WallEntry } from '../types';
+import { totalReactions, dominantReaction } from '../utils/reactions';
+import type { Album, ReactionKind, WallEntry } from '../types';
 
 interface Props {
   community: WallEntry[];
   mine: Album[];
   loaded: boolean;
-  liked: Set<string>;
+  /** Map: album.id → set of reaction kinds I've given. */
+  myReactions: Map<string, Set<ReactionKind>>;
   onBack: () => void;
   onView: (album: Album) => void;
 }
@@ -20,24 +22,26 @@ interface Props {
 type ViewMode = 'list' | 'grid';
 type ScopeMode = 'my' | 'all';
 
-export default function Wall({ community, mine, loaded, liked, onBack, onView }: Props) {
+export default function Wall({ community, mine, loaded, myReactions, onBack, onView }: Props) {
   const [view, setView] = useState<ViewMode>('list');
-  // Default to MY when user has records, otherwise show community first.
   const [scope, setScope] = useState<ScopeMode>(mine.length > 0 ? 'my' : 'all');
 
-  // Wrap own albums into WallEntry shape so the renderers stay uniform.
+  const reactionsOf = (id: string): Set<ReactionKind> =>
+    myReactions.get(id) ?? new Set<ReactionKind>();
+
   // MY → chronological (newest first, already that way in mine[]).
-  // ALL → sorted by like count desc, then chronological.
+  // ALL → sorted by total reaction count desc.
   const entries: WallEntry[] = useMemo(() => {
     if (scope === 'my') {
       return mine.map((a) => ({ userId: 'self', userName: 'You', album: a }));
     }
     return [...community].sort((a, b) => {
-      const ca = displayLikeCount(a.album.id, liked.has(a.album.id));
-      const cb = displayLikeCount(b.album.id, liked.has(b.album.id));
+      const ca = totalReactions(a.album.id, reactionsOf(a.album.id));
+      const cb = totalReactions(b.album.id, reactionsOf(b.album.id));
       return cb - ca;
     });
-  }, [scope, mine, community, liked]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scope, mine, community, myReactions]);
 
   const total = entries.length;
 
@@ -116,9 +120,9 @@ export default function Wall({ community, mine, loaded, liked, onBack, onView }:
       ) : entries.length === 0 ? (
         <div className="acg-wall-empty">{t('wall_empty')}</div>
       ) : view === 'list' ? (
-        <ListView entries={entries} liked={liked} onSelect={onView} scope={scope} />
+        <ListView entries={entries} reactionsOf={reactionsOf} onSelect={onView} scope={scope} />
       ) : (
-        <GridView entries={entries} liked={liked} onSelect={onView} scope={scope} />
+        <GridView entries={entries} reactionsOf={reactionsOf} onSelect={onView} scope={scope} />
       )}
     </Ticket>
   );
@@ -128,20 +132,21 @@ export default function Wall({ community, mine, loaded, liked, onBack, onView }:
 
 interface ViewProps {
   entries: WallEntry[];
-  liked: Set<string>;
+  reactionsOf: (id: string) => Set<ReactionKind>;
   scope: ScopeMode;
   onSelect: (album: Album) => void;
 }
 
-function ListView({ entries, liked, scope, onSelect }: ViewProps) {
+function ListView({ entries, reactionsOf, scope, onSelect }: ViewProps) {
   return (
     <ul className="acg-wall-list">
       {entries.map((e, i) => {
         const idx = i + 1;
         const catNum = e.album.catalog ?? `ALT-${String(idx).padStart(3, '0')}`;
         const vinyl = e.album.vinyl ?? vinylFor(e.album.id);
-        const isLiked = liked.has(e.album.id);
-        const likeCount = displayLikeCount(e.album.id, isLiked);
+        const myR = reactionsOf(e.album.id);
+        const dominant = dominantReaction(e.album.id, myR);
+        const total = totalReactions(e.album.id, myR);
         return (
           <li key={`${e.userId}-${e.album.id}`}>
             <button type="button" className="acg-wall-row"
@@ -163,7 +168,9 @@ function ListView({ entries, liked, scope, onSelect }: ViewProps) {
                   <span>{genreFor(e.album.style, e.album.subtitle)}</span>
                 </div>
               </div>
-              {scope === 'all' && <LikeBadge liked={isLiked} count={likeCount} />}
+              {scope === 'all'
+                ? <ReactionBadge dominant={dominant} count={total} mine={myR.size > 0} />
+                : <span />}
               <Arrow className="acg-wall-row__arrow" size={16} />
             </button>
           </li>
@@ -173,14 +180,15 @@ function ListView({ entries, liked, scope, onSelect }: ViewProps) {
   );
 }
 
-function GridView({ entries, liked, scope, onSelect }: ViewProps) {
+function GridView({ entries, reactionsOf, scope, onSelect }: ViewProps) {
   return (
     <ul className="acg-wall-grid">
       {entries.map((e, i) => {
         const idx = i + 1;
         const catNum = e.album.catalog ?? `ALT-${String(idx).padStart(3, '0')}`;
-        const isLiked = liked.has(e.album.id);
-        const likeCount = displayLikeCount(e.album.id, isLiked);
+        const myR = reactionsOf(e.album.id);
+        const dominant = dominantReaction(e.album.id, myR);
+        const total = totalReactions(e.album.id, myR);
         return (
           <li key={`${e.userId}-${e.album.id}`}>
             <button type="button" className="acg-wall-tile"
@@ -190,8 +198,8 @@ function GridView({ entries, liked, scope, onSelect }: ViewProps) {
                      src={e.album.imageUrl} alt={e.album.title} draggable={false} />
                 {scope === 'all' && (
                   <span className="acg-wall-tile__like">
-                    <LikeIcon liked={isLiked} />
-                    {likeCount}
+                    <ReactionIcon kind={dominant} size={10} />
+                    {total}
                   </span>
                 )}
               </div>
@@ -207,24 +215,10 @@ function GridView({ entries, liked, scope, onSelect }: ViewProps) {
   );
 }
 
-function LikeIcon({ liked }: { liked: boolean }) {
+function ReactionBadge({ dominant, count, mine }: { dominant: ReactionKind; count: number; mine: boolean }) {
   return (
-    <svg viewBox="0 0 16 14" width={11} height={10} aria-hidden>
-      <path
-        d="M8 13.5 L 1.5 7.5 a 3.5 3.5 0 0 1 5 -5 L 8 4 L 9.5 2.5 a 3.5 3.5 0 0 1 5 5 Z"
-        fill={liked ? 'currentColor' : 'none'}
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="miter"
-      />
-    </svg>
-  );
-}
-
-function LikeBadge({ liked, count }: { liked: boolean; count: number }) {
-  return (
-    <span className={`acg-like-badge ${liked ? 'is-liked' : ''}`}>
-      <LikeIcon liked={liked} />
+    <span className={`acg-like-badge ${mine ? 'is-liked' : ''}`}>
+      <ReactionIcon kind={dominant} size={11} />
       <span>{count}</span>
     </span>
   );

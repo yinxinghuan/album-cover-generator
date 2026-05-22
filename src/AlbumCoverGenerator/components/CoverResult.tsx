@@ -2,19 +2,21 @@ import { useEffect, useRef, useState } from 'react';
 import Ticket from './Ticket';
 import Arrow from './Arrow';
 import { RealisticVinyl } from './Vinyl';
+import ReactionIcon from './ReactionIcons';
 import { t } from '../i18n';
 import { trackTime, genreFor } from '../utils/catalog';
 import { vinylFor, vinylDesignLabel } from '../utils/vinyl';
 import { playMusic, parseMusicSpec, type MusicHandle } from '../utils/music';
-import type { Album } from '../types';
+import { reactionCount } from '../utils/reactions';
+import { REACTION_KINDS, type Album, type ReactionKind } from '../types';
 
 interface Props {
   album: Album;
   /** 'release' = just-pressed (default); 'play' = viewing from wall. */
   viewMode?: 'release' | 'play';
-  /** Has the current user liked this album? (Play mode only.) */
-  liked?: boolean;
-  onToggleLike?: () => void;
+  /** Which reactions the current user has given this album. */
+  myReactions?: Set<ReactionKind>;
+  onToggleReaction?: (kind: ReactionKind) => void;
   onNew: () => void;
   onWall: () => void;
   onShare?: () => void;
@@ -25,8 +27,8 @@ interface Props {
 export default function CoverResult({
   album,
   viewMode = 'release',
-  liked = false,
-  onToggleLike,
+  myReactions,
+  onToggleReaction,
   onNew,
   onWall,
   onShare,
@@ -34,6 +36,7 @@ export default function CoverResult({
   shareDisabled,
 }: Props) {
   const isPlayMode = viewMode === 'play';
+  const reactions = myReactions ?? new Set<ReactionKind>();
   const [revealed, setRevealed] = useState(false);
   useEffect(() => {
     const id = requestAnimationFrame(() => setRevealed(true));
@@ -183,26 +186,29 @@ export default function CoverResult({
           ))}
         </ol>
 
+        {isPlayMode && onToggleReaction && (
+          <div className="acg-reactions" role="group" aria-label="reactions">
+            {REACTION_KINDS.map((k) => {
+              const active = reactions.has(k);
+              const count = reactionCount(album.id, k, active);
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  className={`acg-reaction ${active ? 'is-on' : ''}`}
+                  onPointerDown={() => onToggleReaction(k)}
+                  aria-pressed={active}
+                  aria-label={k}
+                >
+                  <ReactionIcon kind={k} size={14} className="acg-reaction__icon" />
+                  <span className="acg-reaction__count">{count}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         <div className="acg-actions">
-          {isPlayMode && onToggleLike && (
-            <button
-              type="button"
-              className={`acg-btn acg-btn--like ${liked ? 'is-liked' : ''}`}
-              onPointerDown={onToggleLike}
-              aria-pressed={liked}
-            >
-              <svg viewBox="0 0 16 14" width={14} height={12} aria-hidden>
-                <path
-                  d="M8 13.5 L 1.5 7.5 a 3.5 3.5 0 0 1 5 -5 L 8 4 L 9.5 2.5 a 3.5 3.5 0 0 1 5 5 Z"
-                  fill={liked ? 'currentColor' : 'none'}
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinejoin="miter"
-                />
-              </svg>
-              {liked ? t('liked') : t('like')}
-            </button>
-          )}
           {onShare && (
             <button type="button" className="acg-btn acg-btn--ghost"
                     onPointerDown={onShare} disabled={shareDisabled}>

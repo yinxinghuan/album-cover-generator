@@ -127,22 +127,48 @@ export default function AlbumCoverGenerator() {
     setPhase('result');
   };
 
-  // ─── Likes ────────────────────────────────────────────────────────
-  const liked = new Set<string>(savedData?.liked ?? []);
-  const toggleLike = (albumId: string) => {
-    const next = new Set(liked);
-    if (next.has(albumId)) next.delete(albumId);
-    else next.add(albumId);
-    persist({ albums: savedData?.albums ?? [], liked: [...next] });
+  // ─── Reactions ────────────────────────────────────────────────────
+  // New model: per-album list of ReactionKind. Migrate the legacy
+  // single-like `save.liked` array into reactions[id].heart on first
+  // read so saved hearts don't vanish.
+  const myReactions = (() => {
+    const out = new Map<string, Set<import('./types').ReactionKind>>();
+    const reactions = savedData?.reactions ?? {};
+    for (const [id, kinds] of Object.entries(reactions)) {
+      out.set(id, new Set(kinds));
+    }
+    for (const legacyId of savedData?.liked ?? []) {
+      if (!out.has(legacyId)) out.set(legacyId, new Set(['heart']));
+      else out.get(legacyId)!.add('heart');
+    }
+    return out;
+  })();
+  const reactionsFor = (id: string) => myReactions.get(id) ?? new Set<import('./types').ReactionKind>();
+  const toggleReaction = (albumId: string, kind: import('./types').ReactionKind) => {
+    const current = new Set(myReactions.get(albumId) ?? []);
+    if (current.has(kind)) current.delete(kind);
+    else current.add(kind);
+    const reactions: Record<string, import('./types').ReactionKind[]> = {};
+    for (const [id, kinds] of myReactions) {
+      if (id === albumId) reactions[id] = [...current];
+      else reactions[id] = [...kinds];
+    }
+    if (!reactions[albumId]) reactions[albumId] = [...current];
+    persist({ albums: savedData?.albums ?? [], reactions });
   };
 
   // ---- Phase transitions ----
 
   const handleSubmit = async (words: [string, string, string]) => {
     playNeedleDrop();
-    // Pre-roll the vinyl design now so the loading phase can show the
-    // record being pressed in its final color. The album.id is forecast
-    // so the design persists onto the album record.
+    // Smooth-scroll the input body to top first, so the vinyl insertion
+    // animation lands in the user's visible area (and not below the
+    // viewport where the press button was tapped).
+    const body = document.querySelector('.acg-ticket__body');
+    if (body && body.scrollTop > 0) {
+      body.scrollTo({ top: 0, behavior: 'smooth' });
+      await new Promise(r => setTimeout(r, 280));
+    }
     const catalog = catalogNumber(pressed);
     const forecastId = newAlbumId();
     const vinyl = vinylFor(forecastId);
@@ -239,8 +265,8 @@ export default function AlbumCoverGenerator() {
           <CoverResult
             album={current}
             viewMode={cameFromWall ? 'play' : 'release'}
-            liked={liked.has(current.id)}
-            onToggleLike={cameFromWall ? () => toggleLike(current.id) : undefined}
+            myReactions={reactionsFor(current.id)}
+            onToggleReaction={cameFromWall ? (k) => toggleReaction(current.id, k) : undefined}
             onNew={handleNew}
             onWall={handleWall}
             onShare={isInAigram ? undefined : handleShare}
@@ -253,7 +279,7 @@ export default function AlbumCoverGenerator() {
             community={wallEntries}
             mine={albums}
             loaded={wallLoaded}
-            liked={liked}
+            myReactions={myReactions}
             onBack={handleBackFromWall}
             onView={handleViewFromWall}
           />

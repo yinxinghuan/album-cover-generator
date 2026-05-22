@@ -45,7 +45,9 @@ export default function CoverPlaceholder({ variant, catalog, design }: Props) {
           <RealisticVinyl design={design} catalog={catalog} spinning inserting />
         </div>
       )}
-      <div className="acg-cover-panel__caption">{t(captionKey)}</div>
+      {variant !== 'pressing' && (
+        <div className="acg-cover-panel__caption">{t(captionKey)}</div>
+      )}
     </div>
   );
 }

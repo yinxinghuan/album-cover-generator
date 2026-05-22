@@ -70,10 +70,17 @@ export interface Album {
   music?: MusicSpec;
 }
 
+export type ReactionKind = 'heart' | 'fire' | 'mind' | 'eye';
+
+export const REACTION_KINDS: ReactionKind[] = ['heart', 'fire', 'mind', 'eye'];
+
 export interface AlbumSave {
   albums: Album[];
-  /** Album IDs the current user has liked (their own + others'). */
+  /** Legacy: album IDs hearted in the old single-like model. Read-only;
+   *  new writes go to `reactions`. */
   liked?: string[];
+  /** New model: per-album list of reactions the current user gave. */
+  reactions?: Record<string, ReactionKind[]>;
 }
 
 export interface WallEntry {

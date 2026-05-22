@@ -687,6 +687,47 @@
   }
 }
 
+// ===== Reactions row (result page, play mode) =====
+.acg-reactions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.acg-reaction {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: transparent;
+  color: rgba(255, 226, 201, 0.6);
+  border: 1.5px solid rgba(255, 226, 201, 0.22);
+  font-family: @font-mono;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease, transform 140ms ease;
+  &:active { transform: translateY(1px); }
+  &.is-on {
+    background: @orange;
+    color: @ink;
+    border-color: @orange;
+  }
+}
+
+.acg-reaction__icon {
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.acg-reaction__count {
+  min-width: 18px;
+  text-align: left;
+}
+
 // Like overlay on grid tile
 .acg-wall-tile__cover-wrap {
   position: relative;
@@ -1497,6 +1538,77 @@
   }
 }
 
+// ===== Pressing progress (compact, sits right under vinyl) =====
+//
+// 5 thin segment bars + active step name above. Sized so the vinyl +
+// progress + footer all fit one viewport. Replaces the longer
+// vertical process timeline that looked like the input track list.
+
+.acg-press-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.acg-press-progress__label {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-family: @font-grotesque;
+}
+
+.acg-press-progress__step {
+  font-family: @font-mono;
+  font-size: 11px;
+  letter-spacing: 0.10em;
+  color: rgba(255, 226, 201, 0.55);
+}
+
+.acg-press-progress__name {
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: -0.015em;
+  color: @orange;
+  text-transform: capitalize;
+}
+
+.acg-press-progress__track {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.acg-press-progress__seg {
+  height: 4px;
+  background: rgba(255, 226, 201, 0.18);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+  &.is-done {
+    background: @orange;
+  }
+  &.is-active {
+    background: rgba(255, 226, 201, 0.18);
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: @orange;
+      animation: acg-press-fill 11s linear forwards;
+    }
+  }
+}
+
+@keyframes acg-press-fill {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+.acg-fineprint--center {
+  text-align: center;
+}
+
 // ===== Process timeline (loading phase) =====
 
 .acg-process {
@@ -1726,7 +1838,7 @@
 // ===== Wall row — add a stub no. column on the left =====
 
 .acg-wall-row {
-  grid-template-columns: 38px 130px 1fr 18px !important;
+  grid-template-columns: 38px 130px 1fr auto 18px !important;
   gap: 12px !important;
 }
 

@@ -10,28 +10,30 @@ interface Props {
   vinyl: VinylDesign;
 }
 
-const STEP_KEYS = [
-  'step_master',
-  'step_lacquer',
-  'step_wax',
-  'step_sleeve',
-  'step_ship',
+const STEPS = [
+  'step_master',   // cut master
+  'step_lacquer',  // coat lacquer
+  'step_wax',      // press wax
+  'step_sleeve',   // ink sleeve
+  'step_ship',     // ship out
 ];
 
+// Approx time per step. The full 5-step ramp lines up roughly with the
+// actual gen-image latency (~50-60s). Each step gets ~11s in the
+// indicator; if generation finishes early/late the next phase change
+// supersedes anyway.
+const STEP_MS = 11_000;
+
 export default function CoverLoading({ stage, catalog, vinyl }: Props) {
-  // Walk through the steps over time. Naming stage progresses through 1-2,
-  // pressing stage progresses through 3-5. The motion is purely visual —
-  // the real generation timing is non-deterministic.
   const [activeIdx, setActiveIdx] = useState(0);
+
   useEffect(() => {
-    setActiveIdx(stage === 'naming' ? 0 : 2);
-    let id: ReturnType<typeof setInterval> | null = null;
-    if (stage === 'naming') {
-      id = setInterval(() => setActiveIdx(i => Math.min(1, i + 1)), 3500);
-    } else if (stage === 'pressing') {
-      id = setInterval(() => setActiveIdx(i => Math.min(4, i + 1)), 4200);
-    }
-    return () => { if (id) clearInterval(id); };
+    // Reset on every loading mount.
+    setActiveIdx(0);
+    const id = setInterval(() => {
+      setActiveIdx((i) => Math.min(STEPS.length - 1, i + 1));
+    }, STEP_MS);
+    return () => clearInterval(id);
   }, [stage]);
 
   return (
@@ -42,31 +44,27 @@ export default function CoverLoading({ stage, catalog, vinyl }: Props) {
     >
       <CoverPlaceholder catalog={catalog} variant="pressing" design={vinyl} />
 
-      <h1 className="acg-display acg-display--hero">{t('loading_status')}</h1>
-      <p className="acg-deck">{t('loading_sub')}</p>
+      <div className="acg-press-progress">
+        <div className="acg-press-progress__label">
+          <span className="acg-press-progress__step">
+            {String(activeIdx + 1).padStart(2, '0')} / {String(STEPS.length).padStart(2, '0')}
+          </span>
+          <span className="acg-press-progress__name">{t(STEPS[activeIdx])}</span>
+        </div>
+        <div className="acg-press-progress__track">
+          {STEPS.map((_, i) => (
+            <span
+              key={i}
+              className={
+                'acg-press-progress__seg ' +
+                (i < activeIdx ? 'is-done' : i === activeIdx ? 'is-active' : '')
+              }
+            />
+          ))}
+        </div>
+      </div>
 
-      <div className="acg-perf acg-perf--label" data-label={t('perf_process')} />
-
-      <ol className="acg-process">
-        {STEP_KEYS.map((k, i) => {
-          const done = i < activeIdx;
-          const active = i === activeIdx;
-          const cls = done ? 'is-done' : active ? 'is-active' : '';
-          return (
-            <li key={k} className={`acg-process__step ${cls}`}>
-              <span className="acg-process__mark" aria-hidden>
-                {done ? '✓' : active ? '◉' : '◦'}
-              </span>
-              <span className="acg-process__name">{t(k)}</span>
-              {active && <span className="acg-process__pulse" aria-hidden />}
-            </li>
-          );
-        })}
-      </ol>
-
-      <div className="acg-loading-bar"><span /></div>
-
-      <p className="acg-fineprint">{t('loading_fineprint')}</p>
+      <p className="acg-fineprint acg-fineprint--center">{t('loading_fineprint')}</p>
     </Ticket>
   );
 }
