@@ -635,11 +635,17 @@
 // phase, so the sleeve is rendered with art already in cache — no
 // black-frame flash.
 .acg-release-display.is-fresh {
+  // `backwards` (not `both`) — the from-state applies during any
+  // animation-delay window, and after the animation ends the element
+  // releases back to its CSS-cascaded transform. Without this, the
+  // `to` transform stays pinned forever and overrides the
+  // display-mode classes (cover-only / vinyl-only would be stuck at
+  // the half-extracted position).
   .acg-release-display__vinyl {
-    animation: acg-fresh-vinyl-settle 900ms cubic-bezier(0.45, 0.05, 0.5, 0.95) both;
+    animation: acg-fresh-vinyl-settle 900ms cubic-bezier(0.45, 0.05, 0.5, 0.95) backwards;
   }
   .acg-release-display__sleeve {
-    animation: acg-fresh-sleeve-slide 1200ms cubic-bezier(0.45, 0.05, 0.5, 0.95) 320ms both;
+    animation: acg-fresh-sleeve-slide 1200ms cubic-bezier(0.45, 0.05, 0.5, 0.95) 320ms backwards;
   }
 }
 
