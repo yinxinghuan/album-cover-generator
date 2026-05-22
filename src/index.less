@@ -19,6 +19,15 @@ html, body, #root {
   user-select: none;
 }
 
+// Inputs must opt back IN to text-editing affordances so iOS keyboard
+// behaves correctly — cursor placement, selection handles, commit gesture.
+input, textarea {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+  touch-action: auto;
+}
+
 img, svg {
   -webkit-user-drag: none;
   user-select: none;

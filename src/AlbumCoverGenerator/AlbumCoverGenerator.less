@@ -370,6 +370,10 @@
   padding: 4px 0 4px;
   width: 100%;
   caret-color: @orange;
+  // Belt-and-suspenders for older iOS that ignores interactive-widget —
+  // when this input is scrolled into view on focus, keep headroom for
+  // the on-screen keyboard.
+  scroll-margin-bottom: 120px;
   &::placeholder {
     color: rgba(255, 226, 201, 0.30);
     font-weight: 700;

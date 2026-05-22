@@ -12,7 +12,7 @@ import { useWall } from './hooks/useWall';
 import { pickStyle, prependAlbum, newAlbumId } from './utils/album';
 import { catalogNumber } from './utils/catalog';
 import { vinylFor } from './utils/vinyl';
-import { startAmbient, playNeedleDrop, playClick, playRevealChord } from './utils/audio';
+import { startAmbient, stopAmbient, playNeedleDrop, playClick, playRevealChord } from './utils/audio';
 import { t } from './i18n';
 import type { Album, AlbumSave, Phase } from './types';
 import './AlbumCoverGenerator.less';
@@ -96,6 +96,17 @@ export default function AlbumCoverGenerator() {
     window.addEventListener('pointerdown', onPointer, { once: true });
     return () => window.removeEventListener('pointerdown', onPointer);
   }, []);
+
+  // Silence ambient on the result page so it doesn't bleed under the
+  // synthesized track that has its own dedicated Play button. Resume
+  // ambient on any other phase if the audio context is already unlocked.
+  useEffect(() => {
+    if (phase === 'result') {
+      stopAmbient();
+    } else if (hasFirstTouched) {
+      startAmbient();
+    }
+  }, [phase, hasFirstTouched]);
 
   // Local mirror of the user's discography so freshly pressed records
   // immediately show with the correct catalog #, instead of waiting for
