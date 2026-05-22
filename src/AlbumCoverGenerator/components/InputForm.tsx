@@ -107,10 +107,14 @@ function TrackInput({ n, placeholder, value, setValue, inputRef, onEnter }: Trac
         ref={inputRef}
         className="acg-track-in__field"
         type="text"
+        inputMode="text"
+        // NOTE: do NOT set autoCorrect="off" / spellCheck={false}.
+        // Those together suppress the iOS IME candidate strip — the
+        // bar with suggestions that Chinese pinyin / Japanese kana /
+        // Korean hangul depend on for word selection. Leaving them at
+        // their defaults restores the native keyboard experience.
         autoComplete="off"
         autoCapitalize="none"
-        autoCorrect="off"
-        spellCheck={false}
         maxLength={20}
         placeholder={placeholder}
         value={value}
