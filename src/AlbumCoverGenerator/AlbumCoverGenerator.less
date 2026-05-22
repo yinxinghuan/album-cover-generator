@@ -1589,25 +1589,55 @@
 // once over the ~55s pressing window. No separate bar; the vinyl
 // itself carries time + step (via label change).
 
-// Loading-screen stage: vinyl + caption cluster vertically centered
-// inside the remaining ticket body. Pulls the composition toward the
-// optical center instead of stacking everything at the top.
-.acg-press-stage {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 32px;
-  min-height: 0;
-}
-
 .acg-press-caption {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  margin-top: 22px;
   text-align: center;
+}
+
+// Liner-note specs strip — fills the body space below the caption.
+// Static (doesn't change during loading) on purpose; reads like real
+// printed back-sleeve metadata.
+.acg-press-specs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 28px;
+  text-align: center;
+  color: rgba(255, 226, 201, 0.42);
+}
+
+.acg-press-specs__rule {
+  width: 40px;
+  height: 1px;
+  background: rgba(255, 226, 201, 0.20);
+}
+
+.acg-press-specs__strip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: @font-mono;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 226, 201, 0.62);
+}
+
+.acg-press-specs__dot {
+  color: rgba(255, 226, 201, 0.28);
+}
+
+.acg-press-specs__plant {
+  font-family: @font-mono;
+  font-size: 9px;
+  letter-spacing: 0.30em;
+  text-transform: uppercase;
+  color: rgba(255, 226, 201, 0.32);
 }
 
 .acg-press-caption__name {

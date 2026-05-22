@@ -37,14 +37,28 @@ export default function CoverLoading({ stage, catalog, vinyl }: Props) {
       catalog={catalog}
       footerHero={t('footer_hero_pressing')}
     >
-      <div className="acg-press-stage">
-        <CoverPlaceholder catalog={catalog} variant="pressing" design={vinyl} />
+      <CoverPlaceholder catalog={catalog} variant="pressing" design={vinyl} />
 
-        <div className="acg-press-caption">
-          <span className="acg-press-caption__name" key={STEPS[activeIdx]}>
-            {t(STEPS[activeIdx])}
-          </span>
-          <span className="acg-press-caption__hint">{t('loading_fineprint')}</span>
+      <div className="acg-press-caption">
+        <span className="acg-press-caption__name" key={STEPS[activeIdx]}>
+          {t(STEPS[activeIdx])}
+        </span>
+        <span className="acg-press-caption__hint">{t('loading_fineprint')}</span>
+      </div>
+
+      <div className="acg-press-specs" aria-hidden>
+        <span className="acg-press-specs__rule" />
+        <div className="acg-press-specs__strip">
+          <span>33⅓ RPM</span>
+          <span className="acg-press-specs__dot">·</span>
+          <span>12" LP</span>
+          <span className="acg-press-specs__dot">·</span>
+          <span>180 G</span>
+          <span className="acg-press-specs__dot">·</span>
+          <span>SIDE A</span>
+        </div>
+        <div className="acg-press-specs__plant">
+          ALTERU PRESSING PLANT — {catalog}
         </div>
       </div>
     </Ticket>
