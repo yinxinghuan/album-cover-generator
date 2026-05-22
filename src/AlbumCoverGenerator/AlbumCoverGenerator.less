@@ -636,16 +636,16 @@
 // black-frame flash.
 .acg-release-display.is-fresh {
   .acg-release-display__vinyl {
-    animation: acg-fresh-vinyl-settle 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: acg-fresh-vinyl-settle 900ms cubic-bezier(0.45, 0.05, 0.5, 0.95) both;
   }
   .acg-release-display__sleeve {
-    animation: acg-fresh-sleeve-slide 820ms cubic-bezier(0.22, 1, 0.36, 1) 240ms both;
+    animation: acg-fresh-sleeve-slide 1200ms cubic-bezier(0.45, 0.05, 0.5, 0.95) 320ms both;
   }
 }
 
 @keyframes acg-fresh-vinyl-settle {
   from {
-    transform: translate(-3%, -50%) scale(0.94);
+    transform: translate(-3%, -50%) scale(0.93);
     opacity: 0;
   }
   to {
@@ -656,7 +656,7 @@
 
 @keyframes acg-fresh-sleeve-slide {
   from {
-    transform: translate(-130%, -50%);
+    transform: translate(-135%, -50%);
     opacity: 0;
   }
   to {
@@ -1596,19 +1596,15 @@
 // ─── Insertion animation (one-shot on mount) ───
 
 .acg-vinyl-real.is-inserting {
-  animation: acg-vinyl-insert 720ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: acg-vinyl-insert 1180ms cubic-bezier(0.45, 0.05, 0.5, 0.95) both;
 }
 
 @keyframes acg-vinyl-insert {
-  0% {
-    transform: translateX(110%) rotate(-45deg) scale(0.92);
+  from {
+    transform: translateX(118%) rotate(-32deg) scale(0.92);
     opacity: 0;
   }
-  60% {
-    transform: translateX(0) rotate(0deg) scale(1);
-    opacity: 1;
-  }
-  100% {
+  to {
     transform: translateX(0) rotate(0deg) scale(1);
     opacity: 1;
   }
