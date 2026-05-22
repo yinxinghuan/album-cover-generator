@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import Ticket from './Ticket';
-import Arrow from './Arrow';
 import { RealisticVinyl } from './Vinyl';
 import ReactionIcon from './ReactionIcons';
 import { t } from '../i18n';
@@ -86,7 +85,12 @@ export default function CoverResult({
       <Ticket
         topLabel={isPlayMode ? t('ticket_label_play') : t('ticket_label_done')}
         catalog={cat}
-        footerHero={isPlayMode ? t('footer_hero_play') : t('footer_hero_done')}
+        footerHero={isPlayMode ? t('result_back_to_wall') : t('result_new')}
+        footerHeroDirection={isPlayMode ? 'back' : 'forward'}
+        onFooterHeroClick={isPlayMode ? onWall : onNew}
+        footerLeftAction={isPlayMode
+          ? { label: t('new_press_link'), onClick: onNew }
+          : { label: t('wall_link'), onClick: onWall }}
       >
         <div
           className={`acg-release-display acg-release-display--${displayMode} ${isPlayMode ? '' : 'is-fresh'}`}
@@ -208,29 +212,14 @@ export default function CoverResult({
           </div>
         )}
 
-        <div className="acg-actions">
-          {onShare && (
+        {onShare && (
+          <div className="acg-actions">
             <button type="button" className="acg-btn acg-btn--ghost"
                     onPointerDown={onShare} disabled={shareDisabled}>
               {shareLabel || t('result_share')}
             </button>
-          )}
-          {isPlayMode ? (
-            <button type="button" className="acg-btn acg-btn--solid" onPointerDown={onWall}>
-              ← {t('result_back_to_wall')}
-            </button>
-          ) : (
-            <>
-              <button type="button" className="acg-btn acg-btn--ghost" onPointerDown={onWall}>
-                {t('result_wall')}
-              </button>
-              <button type="button" className="acg-btn acg-btn--solid" onPointerDown={onNew}>
-                {t('result_new')}
-                <Arrow className="acg-press__arrow" size={18} />
-              </button>
-            </>
-          )}
-        </div>
+          </div>
+        )}
       </Ticket>
     </div>
   );

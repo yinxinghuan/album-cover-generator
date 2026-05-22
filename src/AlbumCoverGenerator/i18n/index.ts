@@ -28,6 +28,8 @@ const en: Dict = {
   ticket_label_done: 'release ticket',
   ticket_label_pressing: 'pressing…',
   ticket_label_wall: 'archive',
+  wall_link: 'archive',
+  new_press_link: 'new press',
   brand: 'ALTERU RECORDS',
   brand_mark: 'ALT24',
 
@@ -113,6 +115,8 @@ const zh: Dict = {
   ticket_label_done: '发行票',
   ticket_label_pressing: '压片中…',
   ticket_label_wall: '档案',
+  wall_link: '唱片墙',
+  new_press_link: '新压一张',
   brand: 'ALTERU RECORDS',
   brand_mark: 'ALT24',
 
@@ -190,6 +194,8 @@ const es: Dict = {
   ticket_label_done: 'ticket de lanzamiento',
   ticket_label_pressing: 'prensando…',
   ticket_label_wall: 'archivo',
+  wall_link: 'archivo',
+  new_press_link: 'nuevo',
   brand: 'ALTERU RECORDS',
   brand_mark: 'ALT24',
 
@@ -267,6 +273,8 @@ const pt: Dict = {
   ticket_label_done: 'ticket de lançamento',
   ticket_label_pressing: 'prensando…',
   ticket_label_wall: 'arquivo',
+  wall_link: 'arquivo',
+  new_press_link: 'novo',
   brand: 'ALTERU RECORDS',
   brand_mark: 'ALT24',
 
@@ -344,6 +352,8 @@ const ru: Dict = {
   ticket_label_done: 'релизный билет',
   ticket_label_pressing: 'пресс…',
   ticket_label_wall: 'архив',
+  wall_link: 'архив',
+  new_press_link: 'новый',
   brand: 'ALTERU RECORDS',
   brand_mark: 'ALT24',
 
@@ -421,6 +431,8 @@ const ja: Dict = {
   ticket_label_done: 'リリース票',
   ticket_label_pressing: 'プレス中…',
   ticket_label_wall: 'アーカイブ',
+  wall_link: 'アーカイブ',
+  new_press_link: '新規',
   brand: 'ALTERU RECORDS',
   brand_mark: 'ALT24',
 
@@ -498,6 +510,8 @@ const ko: Dict = {
   ticket_label_done: '발매 티켓',
   ticket_label_pressing: '프레싱…',
   ticket_label_wall: '아카이브',
+  wall_link: '아카이브',
+  new_press_link: '신규',
   brand: 'ALTERU RECORDS',
   brand_mark: 'ALT24',
 
@@ -575,6 +589,8 @@ const fr: Dict = {
   ticket_label_done: 'ticket de sortie',
   ticket_label_pressing: 'pressage…',
   ticket_label_wall: 'archives',
+  wall_link: 'archives',
+  new_press_link: 'nouveau',
   brand: 'ALTERU RECORDS',
   brand_mark: 'ALT24',
 

@@ -17,12 +17,13 @@ interface Props {
   myReactions: Map<string, Set<ReactionKind>>;
   onBack: () => void;
   onView: (album: Album) => void;
+  onNew: () => void;
 }
 
 type ViewMode = 'list' | 'grid';
 type ScopeMode = 'my' | 'all';
 
-export default function Wall({ community, mine, loaded, myReactions, onBack, onView }: Props) {
+export default function Wall({ community, mine, loaded, myReactions, onBack, onView, onNew }: Props) {
   const [view, setView] = useState<ViewMode>('list');
   const [scope, setScope] = useState<ScopeMode>(mine.length > 0 ? 'my' : 'all');
 
@@ -49,18 +50,11 @@ export default function Wall({ community, mine, loaded, myReactions, onBack, onV
     <Ticket
       topLabel={t('ticket_label_wall')}
       catalog={`${String(total).padStart(2, '0')} ${t('on_file')}`}
-      footerHero={t('footer_hero_wall')}
+      footerHero={t('result_new')}
+      onFooterHeroClick={onNew}
+      footerLeftAction={{ label: t('wall_back'), onClick: onBack }}
     >
       <div className="acg-archive-head">
-        <button type="button" className="acg-btn acg-btn--ghost acg-btn--small acg-back-btn"
-                onPointerDown={onBack}>
-          <svg viewBox="0 0 24 12" width={18} height={9} aria-hidden>
-            <path d="M 24 6 H 3 M 9 0 L 2 6 L 9 12"
-                  stroke="currentColor" strokeWidth="2.4"
-                  fill="none" strokeLinecap="square" strokeLinejoin="miter" />
-          </svg>
-          {t('wall_back')}
-        </button>
         <ArchiveIcon className="acg-archive-icon" />
       </div>
 

@@ -259,6 +259,7 @@ export default function AlbumCoverGenerator() {
         {phase === 'input' && (
           <InputForm
             onSubmit={handleSubmit}
+            onWall={handleWall}
             pressed={pressed}
             hasFirstTouched={hasFirstTouched}
           />
@@ -287,6 +288,7 @@ export default function AlbumCoverGenerator() {
             myReactions={myReactions}
             onBack={handleBackFromWall}
             onView={handleViewFromWall}
+            onNew={handleNew}
           />
         )}
       </div>

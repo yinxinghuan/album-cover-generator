@@ -1,6 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
 import Ticket from './Ticket';
-import Arrow from './Arrow';
 import CoverPlaceholder from './CoverPlaceholder';
 import { t } from '../i18n';
 import { catalogNumber } from '../utils/catalog';
@@ -8,11 +7,12 @@ import { vinylFor } from '../utils/vinyl';
 
 interface Props {
   onSubmit: (words: [string, string, string]) => void;
+  onWall: () => void;
   pressed: number;
   hasFirstTouched: boolean;
 }
 
-export default function InputForm({ onSubmit, pressed, hasFirstTouched }: Props) {
+export default function InputForm({ onSubmit, onWall, pressed, hasFirstTouched }: Props) {
   const [w1, setW1] = useState('');
   const [w2, setW2] = useState('');
   const [w3, setW3] = useState('');
@@ -20,6 +20,7 @@ export default function InputForm({ onSubmit, pressed, hasFirstTouched }: Props)
   const r1 = useRef<HTMLInputElement>(null);
   const r2 = useRef<HTMLInputElement>(null);
   const r3 = useRef<HTMLInputElement>(null);
+  const tracksRef = useRef<HTMLOListElement>(null);
 
   const cat = catalogNumber(pressed);
   const today = formatDate(new Date());
@@ -45,8 +46,29 @@ export default function InputForm({ onSubmit, pressed, hasFirstTouched }: Props)
     onSubmit([a, b, c]);
   };
 
+  // Press handler bound to the footer-hero button.
+  // - All three tracks filled → submit (existing flow)
+  // - Otherwise → smooth-scroll the body so the inputs come into view.
+  //   This is the discovery path: many users land on this screen, see
+  //   the vinyl + heading + bottom bar, and never realize the inputs
+  //   live below the fold. Tapping the prominent footer button
+  //   reveals them.
+  const handleFooterPress = () => {
+    if (ready) {
+      submit();
+      return;
+    }
+    tracksRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
   return (
-    <Ticket topLabel={t('ticket_label_in')} catalog={cat} footerHero={t('footer_hero_in')}>
+    <Ticket
+      topLabel={t('ticket_label_in')}
+      catalog={cat}
+      footerHero={t('footer_hero_in')}
+      onFooterHeroClick={handleFooterPress}
+      footerLeftAction={{ label: t('wall_link'), onClick: onWall }}
+    >
       <CoverPlaceholder
         catalog={cat}
         variant={ready ? 'preview' : 'empty'}
@@ -65,7 +87,7 @@ export default function InputForm({ onSubmit, pressed, hasFirstTouched }: Props)
 
       <div className="acg-perf acg-perf--label" data-label={t('perf_a_side')} />
 
-      <ol className="acg-tracks">
+      <ol className="acg-tracks" ref={tracksRef}>
         <TrackInput n={1} placeholder={t('input_w1')} value={w1} setValue={setW1}
                     inputRef={r1} onEnter={() => r2.current?.focus()} />
         <TrackInput n={2} placeholder={t('input_w2')} value={w2} setValue={setW2}
@@ -76,16 +98,8 @@ export default function InputForm({ onSubmit, pressed, hasFirstTouched }: Props)
 
       {err && <div className="acg-err">{err}</div>}
 
-      <button
-        type="button"
-        className={`acg-press ${!hasFirstTouched ? 'is-pulse' : ''}`}
-        onPointerDown={submit}
-      >
-        {t('input_press')}
-        <Arrow className="acg-press__arrow" size={26} />
-      </button>
-
       <p className="acg-fineprint">{t('input_fineprint')}</p>
+      {!hasFirstTouched && <p className="acg-fineprint" aria-hidden />}
     </Ticket>
   );
 }

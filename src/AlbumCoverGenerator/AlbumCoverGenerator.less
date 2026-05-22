@@ -182,6 +182,68 @@
   white-space: pre-wrap;
 }
 
+// Interactive footer hero — turns the decorative bottom hero text into
+// a full-width primary action button. Same massive grotesque, inverted
+// chip styling (pink fill, ink text + arrow). Tapped via onPointerDown.
+.acg-ticket__foot.is-interactive {
+  margin-top: 8px;
+  padding-top: 12px;
+}
+
+.acg-ticket__foot-hero--btn {
+  appearance: none;
+  width: 100%;
+  background: @orange;
+  color: @ink;
+  border: none;
+  padding: 18px 22px;
+  font-family: @font-grotesque;
+  font-weight: 900;
+  font-size: 32px;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  text-transform: capitalize;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: transform 120ms ease, background 160ms ease;
+  -webkit-tap-highlight-color: transparent;
+  &:active { transform: translateY(2px); background: @orange-hot; }
+  &.is-pulse { animation: acg-press-pulse 1900ms ease-in-out infinite; }
+}
+
+.acg-ticket__foot-arrow {
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+// Small secondary nav button in the foot-mark row (replaces the brand
+// label on pages that need a secondary navigation hook — e.g. WALL on
+// input, ↩ BACK on wall, etc.).
+.acg-ticket__foot-action {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 4px 8px;
+  margin: -4px -8px;
+  color: @light;
+  font-family: @font-grotesque;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 140ms ease;
+  &:hover { color: @orange; }
+  &:active { color: @orange-hot; transform: translateY(1px); }
+}
+
 .acg-ticket__foot-mark {
   display: flex;
   align-items: center;
