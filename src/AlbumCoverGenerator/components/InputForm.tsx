@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import Ticket from './Ticket';
+import CoverPlaceholder from './CoverPlaceholder';
 import { t } from '../i18n';
 import { catalogNumber } from '../utils/catalog';
 
@@ -19,6 +20,7 @@ export default function InputForm({ onSubmit, pressed, hasFirstTouched }: Props)
   const r3 = useRef<HTMLInputElement>(null);
 
   const cat = catalogNumber(pressed);
+  const today = formatDate(new Date());
 
   const submit = () => {
     const a = w1.trim(), b = w2.trim(), c = w3.trim();
@@ -35,14 +37,19 @@ export default function InputForm({ onSubmit, pressed, hasFirstTouched }: Props)
 
   return (
     <Ticket topLabel={t('ticket_label_in')} catalog={cat} footerHero={t('footer_hero_in')}>
-      <h1 className="acg-display acg-display--hero">{t('input_heading')}</h1>
+      <CoverPlaceholder catalog={cat} />
 
-      <div className="acg-meta-grid">
-        <Field label="SIDE A" value={t('input_hint_a')} />
-        <Field label="SIDE B" value={t('input_hint_b')} />
+      <div className="acg-orderline">
+        <span className="acg-orderline__label">{t('order_placed')}</span>
+        <span className="acg-orderline__value">{today}</span>
+        <span className="acg-orderline__sep">/</span>
+        <span className="acg-orderline__value">{t('form_no')}</span>
       </div>
 
-      <div className="acg-perf" />
+      <h1 className="acg-display acg-display--hero">{t('input_heading')}</h1>
+      <p className="acg-deck">{t('input_deck')}</p>
+
+      <div className="acg-perf acg-perf--label" data-label={t('perf_a_side')} />
 
       <ol className="acg-tracks">
         <TrackInput n={1} placeholder={t('input_w1')} value={w1} setValue={setW1}
@@ -63,16 +70,9 @@ export default function InputForm({ onSubmit, pressed, hasFirstTouched }: Props)
         {t('input_press')}
         <span className="acg-press__arrow" aria-hidden>→</span>
       </button>
-    </Ticket>
-  );
-}
 
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="acg-field">
-      <div className="acg-field__label">{label}</div>
-      <div className="acg-field__value">{value}</div>
-    </div>
+      <p className="acg-fineprint">{t('input_fineprint')}</p>
+    </Ticket>
   );
 }
 
@@ -88,7 +88,7 @@ interface TrackInputProps {
 function TrackInput({ n, placeholder, value, setValue, inputRef, onEnter }: TrackInputProps) {
   return (
     <li className="acg-track-in">
-      <span className="acg-track-in__n">{String(n).padStart(2, '0')}</span>
+      <span className="acg-track-in__n">TR.{String(n).padStart(2, '0')}</span>
       <input
         ref={inputRef}
         className="acg-track-in__field"
@@ -105,4 +105,10 @@ function TrackInput({ n, placeholder, value, setValue, inputRef, onEnter }: Trac
       />
     </li>
   );
+}
+
+function formatDate(d: Date): string {
+  // 22 MAY 2026
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  return `${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]} ${d.getFullYear()}`;
 }

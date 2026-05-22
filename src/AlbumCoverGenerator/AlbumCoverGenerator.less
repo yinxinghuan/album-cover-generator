@@ -13,7 +13,7 @@
 @orange-dim: #E25700;
 @light:      #FFE2C9;
 
-@font-grotesque: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, 'Inter', Arial, sans-serif;
+@font-grotesque: 'Onest', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
 @font-mono:      ui-monospace, 'SF Mono', 'Courier New', monospace;
 
 .acg-root {
@@ -184,10 +184,97 @@
 .acg-perf {
   height: 1px;
   background: repeating-linear-gradient(to right,
-    rgba(255, 226, 201, 0.5) 0 6px, transparent 6px 12px);
+    rgba(255, 226, 201, 0.45) 0 6px, transparent 6px 12px);
   width: 100%;
   position: relative;
-  margin: 4px 0;
+  margin: 4px 0 6px;
+}
+
+// Labelled perforation — small caption sits centered on the dashed line.
+.acg-perf--label {
+  margin: 14px 0 8px;
+  &::after {
+    content: attr(data-label);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 0 10px;
+    background: @ink;
+    font-family: @font-grotesque;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255, 226, 201, 0.5);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+}
+
+// Tear-here variant: orange dashes + orange caption.
+.acg-perf--tear {
+  background: repeating-linear-gradient(to right,
+    @orange 0 7px, transparent 7px 13px);
+  margin: 18px 0 10px;
+  &::after {
+    color: @orange;
+  }
+}
+
+// ===== Order line — date + form-no chip row used by input & result =====
+
+.acg-orderline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-family: @font-grotesque;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: rgba(255, 226, 201, 0.55);
+  margin: 2px 0 -4px;
+}
+
+.acg-orderline__label {
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: rgba(255, 226, 201, 0.4);
+}
+
+.acg-orderline__value {
+  font-family: @font-mono;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: @light;
+  font-weight: 500;
+}
+
+.acg-orderline__sep {
+  color: rgba(255, 226, 201, 0.3);
+}
+
+// ===== Deck — short subtitle/description under the hero =====
+
+.acg-deck {
+  margin: -4px 0 4px;
+  font-family: @font-grotesque;
+  font-size: 14px;
+  letter-spacing: -0.005em;
+  color: rgba(255, 226, 201, 0.65);
+  font-weight: 500;
+}
+
+// ===== Fineprint — receipt bottom note =====
+
+.acg-fineprint {
+  margin: 6px 0 0;
+  font-family: @font-grotesque;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: rgba(255, 226, 201, 0.35);
+  font-weight: 500;
+  line-height: 1.45;
 }
 
 // ===== Field grid (labels + values) =====
@@ -407,6 +494,243 @@
       rgba(255, 226, 201, 0.04) 0%,
       transparent 60%),
     @ink;
+}
+
+// Placeholder cover (input + loading) — flat black with a centered vinyl
+// + a caption label below it.
+.acg-cover-panel--placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 50% 50%,
+      rgba(255, 226, 201, 0.04) 0%,
+      transparent 60%),
+    @ink;
+  gap: 14px;
+}
+
+.acg-cover-panel__caption {
+  position: absolute;
+  bottom: 60px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: @font-grotesque;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 226, 201, 0.5);
+  font-weight: 700;
+}
+
+// QC stamp — overlaid on the released cover, top-right corner.
+.acg-cover-panel__qc {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border: 1.5px solid @orange;
+  color: @orange;
+  background: rgba(10, 10, 10, 0.45);
+  font-family: @font-grotesque;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 800;
+  border-radius: 4px;
+  transform: rotate(-3deg);
+}
+
+.acg-cover-panel__qc-mark {
+  font-weight: 900;
+  font-size: 12px;
+}
+
+// Vinyl visual reused inside the cover panel.
+.acg-cover-vinyl {
+  position: relative;
+  width: 56%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(circle at center,
+      #060503 0px, #060503 1.4px, #181410 1.6px, #181410 3px),
+    radial-gradient(circle at center, #2a221b 0%, #060503 70%);
+  &.is-spinning { animation: acg-vinyl-spin 3.6s linear infinite; }
+}
+
+.acg-cover-vinyl__grooves {
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  box-shadow: inset 0 0 22px rgba(0,0,0,0.85);
+}
+
+.acg-cover-vinyl__label {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 38%;
+  height: 38%;
+  border-radius: 50%;
+  background: @orange;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.acg-cover-vinyl__label-text {
+  font-family: @font-grotesque;
+  font-weight: 900;
+  font-size: 22px;
+  color: @ink;
+  letter-spacing: -0.04em;
+}
+
+.acg-cover-vinyl__spindle {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 5%;
+  height: 5%;
+  border-radius: 50%;
+  background: @ink;
+}
+
+// ===== Process timeline (loading phase) =====
+
+.acg-process {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.acg-process__step {
+  display: grid;
+  grid-template-columns: 28px 1fr 14px;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(255, 226, 201, 0.12);
+  font-family: @font-grotesque;
+  &:last-child { border-bottom: none; }
+}
+
+.acg-process__mark {
+  font-family: @font-grotesque;
+  font-size: 16px;
+  font-weight: 900;
+  color: rgba(255, 226, 201, 0.3);
+  text-align: center;
+}
+
+.acg-process__name {
+  font-family: @font-grotesque;
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: -0.015em;
+  color: rgba(255, 226, 201, 0.5);
+}
+
+.acg-process__step.is-done {
+  .acg-process__mark { color: @orange; }
+  .acg-process__name {
+    color: @light;
+    text-decoration: line-through;
+    text-decoration-color: rgba(255, 226, 201, 0.35);
+    text-decoration-thickness: 1px;
+  }
+}
+
+.acg-process__step.is-active {
+  .acg-process__mark {
+    color: @orange;
+    animation: acg-blink 1100ms ease-in-out infinite;
+  }
+  .acg-process__name {
+    color: @orange;
+    font-weight: 900;
+  }
+}
+
+.acg-process__pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: @orange;
+  justify-self: end;
+  animation: acg-blink 900ms ease-in-out infinite;
+}
+
+@keyframes acg-blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.3; }
+}
+
+// ===== Archive head (wall phase) =====
+
+.acg-archive-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: -2px;
+}
+
+// Tiny stack-of-tickets pictogram.
+.acg-archive-stack {
+  position: relative;
+  width: 34px;
+  height: 22px;
+  flex-shrink: 0;
+  span {
+    position: absolute;
+    border: 1.5px solid @orange;
+    background: transparent;
+    border-radius: 2px;
+    width: 26px;
+    height: 14px;
+    &:nth-child(1) { top: 0; left: 0; transform: rotate(-6deg); }
+    &:nth-child(2) { top: 4px; left: 4px; transform: rotate(3deg); }
+    &:nth-child(3) { top: 6px; left: 8px; background: @orange; border-color: @orange; }
+  }
+}
+
+// ===== Wall row — add a stub no. column on the left =====
+
+.acg-wall-row {
+  grid-template-columns: 38px 78px 1fr 18px !important;
+  gap: 12px !important;
+}
+
+.acg-wall-row__stub {
+  font-family: @font-mono;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: rgba(255, 226, 201, 0.5);
+  text-transform: uppercase;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px dashed rgba(255, 226, 201, 0.2);
+}
+
+.acg-wall-row__cover {
+  width: 78px;
+  height: 78px;
+}
+
+.acg-wall-row__sep {
+  opacity: 0.5;
 }
 
 // Very light filter — keep the AI art's character.

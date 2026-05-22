@@ -1,0 +1,13 @@
+/* Onest — modern open-source neo-grotesque (2023).
+   Variable font: weight axis 100–900.
+   Latin + Latin Extended + Cyrillic.
+   CJK falls back to the platform's native sans (PingFang / Hiragino /
+   Apple SD Gothic on Apple; HarmonyOS Sans / Noto CJK on Android). */
+
+@font-face {
+  font-family: 'Onest';
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  src: url('/album-cover-generator/fonts/onest-var.woff2') format('woff2-variations');
+}

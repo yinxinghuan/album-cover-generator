@@ -28,8 +28,8 @@ export default function CoverResult({
   }, [album.id]);
 
   const cat = album.catalog ?? 'ALT-001';
+  const pressedOn = formatDate(new Date(album.createdAt));
 
-  // Sum of fake track times → total runtime.
   const totalSec = album.words
     .map((w) => trackTime(w).split(':').map(Number))
     .reduce((acc, [m, s]) => acc + m * 60 + s, 0);
@@ -58,6 +58,17 @@ export default function CoverResult({
             {t('ticket_label_done')}
           </span>
           <span className="acg-cover-panel__cat">{cat}</span>
+          <span className="acg-cover-panel__qc" aria-hidden>
+            <span className="acg-cover-panel__qc-mark">✓</span>
+            <span className="acg-cover-panel__qc-text">{t('qc_inspected')}</span>
+          </span>
+        </div>
+
+        <div className="acg-orderline">
+          <span className="acg-orderline__label">{t('pressed_on')}</span>
+          <span className="acg-orderline__value">{pressedOn}</span>
+          <span className="acg-orderline__sep">/</span>
+          <span className="acg-orderline__value">{t('result_qty')}</span>
         </div>
 
         <div className="acg-result-headline">
@@ -65,7 +76,7 @@ export default function CoverResult({
           <h2 className="acg-display acg-display--lg acg-display--orange">{album.title}</h2>
         </div>
 
-        <div className="acg-perf" />
+        <div className="acg-perf acg-perf--label" data-label={t('perf_credits')} />
 
         <div className="acg-meta-grid">
           <Field label={t('result_artist')} value={album.bandName} />
@@ -74,12 +85,12 @@ export default function CoverResult({
           <Field label={t('result_runtime')} value={runtime} mono />
         </div>
 
-        <div className="acg-perf" />
+        <div className="acg-perf acg-perf--tear" data-label={t('perf_tear')} />
 
         <ol className="acg-tracks">
           {album.words.map((w, i) => (
             <li key={i} className="acg-track-row">
-              <span className="acg-track-row__n">{String(i + 1).padStart(2, '0')}</span>
+              <span className="acg-track-row__n">TR.{String(i + 1).padStart(2, '0')}</span>
               <span className="acg-track-row__name">{toTrackCase(w)}</span>
               <span className="acg-track-row__time">{trackTime(w)}</span>
             </li>
@@ -118,4 +129,9 @@ function Field({ label, value, mono }: { label: string; value: string; mono?: bo
 function toTrackCase(w: string): string {
   if (!w) return w;
   return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+}
+
+function formatDate(d: Date): string {
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  return `${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]} ${d.getFullYear()}`;
 }
