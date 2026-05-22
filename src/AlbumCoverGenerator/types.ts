@@ -1,4 +1,18 @@
-export type CoverStyle = 'shoegaze' | 'xerox';
+// CoverStyle is now an open-ended string tag (e.g. 'shoegaze',
+// 'vaporwave', 'folk-revival', 'minimal-techno') chosen by chat from
+// the 3 input words. The full image prompt is also chat-generated
+// (no more hardcoded templates) — see CoverSpec.
+export type CoverStyle = string;
+
+export interface CoverSpec {
+  /** Short genre slug — used as CSS class + sort/group key. */
+  style: string;
+  /** Display label, 2-4 words, shown in the result genre field. */
+  subtitle: string;
+  /** Full prompt for the image generator. Already contains the band
+   *  name + album title in the rendering instructions. */
+  imagePrompt: string;
+}
 
 export type VinylColor =
   | 'black' | 'orange' | 'bone' | 'oxblood' | 'cobalt'
@@ -42,6 +56,9 @@ export interface Album {
   title: string;
   bandName: string;
   style: CoverStyle;
+  /** Chat-generated 2-4 word descriptor of the cover style, shown in the
+   *  result page genre field (e.g. "dreamy lo-fi haze"). */
+  subtitle?: string;
   imageUrl: string;
   createdAt: number;
   /** "ALT-024" — assigned at press time, immutable. */

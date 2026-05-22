@@ -167,7 +167,7 @@ export default function CoverResult({
         <div className="acg-meta-grid">
           <Field label={t('result_artist')} value={album.bandName} />
           <Field label={t('result_title')} value={album.title} />
-          <Field label={t('result_genre')} value={genreFor(album.style)} />
+          <Field label={t('result_genre')} value={genreFor(album.style, album.subtitle)} />
           <Field label={t('result_runtime')} value={runtime} mono />
         </div>
 

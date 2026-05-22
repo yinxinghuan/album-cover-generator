@@ -1776,7 +1776,10 @@
   opacity: 0.5;
 }
 
-// Very light filter — keep the AI art's character.
+// Default cover filter — slight contrast bump, keep the AI art's
+// character. Specific genre slugs can override below (legacy hooks for
+// shoegaze + xerox kept; everything else falls through to the default).
+.acg-cover-panel__art           { filter: contrast(1.04); }
 .acg-cover-panel__art--shoegaze { filter: contrast(1.02) saturate(0.92); }
 .acg-cover-panel__art--xerox    { filter: contrast(1.08); }
 

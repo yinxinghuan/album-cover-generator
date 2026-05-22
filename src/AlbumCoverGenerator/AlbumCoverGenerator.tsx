@@ -9,7 +9,7 @@ import VinylGallery from './components/VinylGallery';
 import AnimDemo from './components/AnimDemo';
 import { useAlbumGen } from './hooks/useAlbumGen';
 import { useWall } from './hooks/useWall';
-import { pickStyle, prependAlbum, newAlbumId } from './utils/album';
+import { prependAlbum, newAlbumId } from './utils/album';
 import { catalogNumber } from './utils/catalog';
 import { vinylFor } from './utils/vinyl';
 import { startAmbient, stopAmbient, playNeedleDrop, playClick, playRevealChord } from './utils/audio';
@@ -149,9 +149,7 @@ export default function AlbumCoverGenerator() {
     setPending({ catalog, vinyl });
     setPhase('generating');
     try {
-      const album = await albumGen.generate({
-        words, style: pickStyle(), catalog,
-      });
+      const album = await albumGen.generate({ words, catalog });
       // Stamp the album with the pre-rolled identity so loading/result
       // share the same vinyl.
       const stamped: Album = { ...album, id: forecastId, vinyl };

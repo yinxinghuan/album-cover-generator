@@ -160,7 +160,7 @@ function ListView({ entries, liked, scope, onSelect }: ViewProps) {
                 <div className="acg-wall-row__meta">
                   <span>{catNum}</span>
                   <span className="acg-wall-row__sep">·</span>
-                  <span>{genreFor(e.album.style)}</span>
+                  <span>{genreFor(e.album.style, e.album.subtitle)}</span>
                 </div>
               </div>
               {scope === 'all' && <LikeBadge liked={isLiked} count={likeCount} />}

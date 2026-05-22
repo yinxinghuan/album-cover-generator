@@ -1,14 +1,18 @@
 import { useCallback, useRef, useState } from 'react';
 import { useGenImage } from '@shared/runtime/useGenImage';
-import { coverPrompt, BAND_NAME_SYSTEM, TITLE_SYSTEM } from '../utils/prompts';
+import {
+  BAND_NAME_SYSTEM,
+  TITLE_SYSTEM,
+  COVER_STYLE_SYSTEM,
+  parseCoverSpec,
+} from '../utils/prompts';
 import { randomBandName, defaultTitle } from '../utils/bandName';
 import { makeAlbum } from '../utils/album';
 import { MUSIC_GEN_SYSTEM, parseMusicSpec } from '../utils/music';
-import type { Album, CoverStyle, MusicSpec } from '../types';
+import type { Album, MusicSpec } from '../types';
 
 interface GenInput {
   words: [string, string, string];
-  style: CoverStyle;
   catalog: string;
 }
 
@@ -50,7 +54,7 @@ export function useAlbumGen(): UseAlbumGen {
   const inFlight = useRef(false);
 
   const generate = useCallback(
-    async ({ words, style, catalog }: GenInput): Promise<Album> => {
+    async ({ words, catalog }: GenInput): Promise<Album> => {
       if (inFlight.current) {
         throw new Error('album-gen: already in flight');
       }
@@ -59,11 +63,13 @@ export function useAlbumGen(): UseAlbumGen {
       setError(null);
       setStage('naming');
 
-      // Run band + title in parallel with offline fallbacks so a chat
-      // outage doesn't block the visual.
       const wordsLine = words.map(w => w.trim()).filter(Boolean).join(', ');
       const namingPrompt = `Three theme words: ${wordsLine}`;
 
+      // 4 parallel chat calls: band name, title, music spec, and cover
+      // spec (genre + subtitle + full image prompt). The cover spec
+      // depends on band + title for text rendering, so it gets resolved
+      // after those two return (still happens during the chat phase).
       const [bandName, title, music] = await Promise.all([
         (async () => {
           try {
@@ -81,10 +87,9 @@ export function useAlbumGen(): UseAlbumGen {
             return defaultTitle(words);
           }
         })(),
-        // Third parallel call: music structure for this album.
         (async (): Promise<MusicSpec> => {
           try {
-            const musicPrompt = `Three theme words: ${wordsLine}\nCover style: ${style}`;
+            const musicPrompt = `Three theme words: ${wordsLine}`;
             return parseMusicSpec(await chatOnce(MUSIC_GEN_SYSTEM, musicPrompt));
           } catch {
             return parseMusicSpec('');
@@ -92,14 +97,38 @@ export function useAlbumGen(): UseAlbumGen {
         })(),
       ]);
 
+      // Cover spec runs after band + title are known so the prompt can
+      // bind them into the text-rendering instructions. Still fast — it's
+      // chat, not image gen.
+      const coverSpec = await (async () => {
+        try {
+          const coverInput = `Three theme words: ${wordsLine}
+Band name: ${bandName}
+Album title: ${title}`;
+          return parseCoverSpec(
+            await chatOnce(COVER_STYLE_SYSTEM, coverInput),
+            words, title, bandName,
+          );
+        } catch {
+          return parseCoverSpec('', words, title, bandName);
+        }
+      })();
+
       setStage('pressing');
 
       try {
-        const imageUrl = await genImg({
-          prompt: coverPrompt(style, words, title, bandName),
+        const imageUrl = await genImg({ prompt: coverSpec.imagePrompt });
+        const album = makeAlbum({
+          words,
+          title,
+          bandName,
+          style: coverSpec.style,
+          imageUrl,
+          catalog,
         });
-        const album = makeAlbum({ words, title, bandName, style, imageUrl, catalog });
         album.music = music;
+        // Stash subtitle on the album so result page can display it.
+        (album as Album & { subtitle?: string }).subtitle = coverSpec.subtitle;
         return album;
       } catch (e) {
         const err = e instanceof Error ? e : new Error(String(e));

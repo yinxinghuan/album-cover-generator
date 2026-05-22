@@ -36,7 +36,16 @@ export function barcode(seed: string): string {
   return digits.join('');
 }
 
-/** Heuristic genre tag based on the cover style. */
-export function genreFor(style: 'shoegaze' | 'xerox'): string {
-  return style === 'shoegaze' ? 'shoegaze · dream-pop' : 'post-punk · lo-fi';
+/** Genre label for the result/wall meta field.
+ *  Prefers the album's chat-generated subtitle; falls back to a
+ *  prettified style slug, then a generic word. */
+export function genreFor(
+  style: string | undefined,
+  subtitle?: string,
+): string {
+  if (subtitle && subtitle.trim()) return subtitle.trim();
+  if (style && style.trim()) {
+    return style.replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  return 'indie';
 }

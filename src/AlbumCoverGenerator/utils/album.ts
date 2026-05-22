@@ -7,10 +7,6 @@ export function newAlbumId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-export function pickStyle(): CoverStyle {
-  return Math.random() < 0.5 ? 'shoegaze' : 'xerox';
-}
-
 export function makeAlbum(opts: {
   words: [string, string, string];
   title: string;
