@@ -144,7 +144,7 @@ function ListView({ entries, reactionsOf, scope, onSelect }: ViewProps) {
         return (
           <li key={`${e.userId}-${e.album.id}`}>
             <button type="button" className="acg-wall-row"
-                    onPointerDown={() => onSelect(e.album)}>
+                    onClick={() => onSelect(e.album)}>
               <span className="acg-wall-row__stub">No.{String(idx).padStart(2, '0')}</span>
               <div className="acg-wall-row__display">
                 <div className="acg-wall-row__vinyl">
@@ -186,7 +186,7 @@ function GridView({ entries, reactionsOf, scope, onSelect }: ViewProps) {
         return (
           <li key={`${e.userId}-${e.album.id}`}>
             <button type="button" className="acg-wall-tile"
-                    onPointerDown={() => onSelect(e.album)}>
+                    onClick={() => onSelect(e.album)}>
               <div className="acg-wall-tile__cover-wrap">
                 <img className={`acg-wall-tile__cover acg-cover-panel__art--${e.album.style}`}
                      src={e.album.imageUrl} alt={e.album.title} draggable={false} />
