@@ -1,0 +1,785 @@
+// Album Cover Generator — `acg-` prefix.
+//
+// A24-style ticket aesthetic. Flat color, scalloped die-cut card edges,
+// MASSIVE grotesque sans display type, tiny ALL-CAPS labels, photo as a
+// contained panel. Two-color discipline: orange + black, no grays.
+
+@bg:         #FF6A00;
+@ink:        #0a0a0a;
+@ink-soft:   rgba(10, 10, 10, 0.6);
+@ink-faint:  rgba(10, 10, 10, 0.36);
+@orange:     #FF6A00;
+@orange-hot: #FF7B1A;
+@orange-dim: #E25700;
+@light:      #FFE2C9;
+
+@font-grotesque: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, 'Inter', Arial, sans-serif;
+@font-mono:      ui-monospace, 'SF Mono', 'Courier New', monospace;
+
+.acg-root {
+  position: fixed;
+  inset: 0;
+  background: @bg;
+  color: @ink;
+  font-family: @font-grotesque;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  overflow: hidden;
+  -webkit-touch-callout: none;
+}
+
+.acg-frame {
+  width: 100%;
+  max-width: 720px;
+  height: 100%;
+  padding: 14px 12px 14px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  &::-webkit-scrollbar { display: none; }
+}
+
+// ===== Ticket scaffold =====
+//
+// Scalloped top + bottom edges via mask. Sides are flat for a cleaner
+// mobile read. The whole card is a single black object.
+
+.acg-ticket {
+  position: relative;
+  width: 100%;
+  background: @ink;
+  color: @light;
+  padding: 28px 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  // Scalloped edges (top + bottom)
+  --r: 9px;
+  --d: 18px;
+  --period: 24px;
+  -webkit-mask:
+    radial-gradient(circle var(--r) at 50% 0,    transparent 99%, #000 100%) 0 0   / var(--period) var(--d) repeat-x,
+    radial-gradient(circle var(--r) at 50% 100%, transparent 99%, #000 100%) 0 100% / var(--period) var(--d) repeat-x,
+    linear-gradient(#000, #000) 0 calc(var(--r) + 1px) / 100% calc(100% - var(--d) - 2px) no-repeat;
+          mask:
+    radial-gradient(circle var(--r) at 50% 0,    transparent 99%, #000 100%) 0 0   / var(--period) var(--d) repeat-x,
+    radial-gradient(circle var(--r) at 50% 100%, transparent 99%, #000 100%) 0 100% / var(--period) var(--d) repeat-x,
+    linear-gradient(#000, #000) 0 calc(var(--r) + 1px) / 100% calc(100% - var(--d) - 2px) no-repeat;
+}
+
+.acg-ticket__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 0 4px;
+  border-bottom: 1px solid rgba(255, 226, 201, 0.18);
+  font-family: @font-grotesque;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.acg-ticket__mark {
+  display: inline-flex;
+  color: @light;
+  width: 18px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+.acg-ticket__head-label {
+  flex: 1;
+  color: @light;
+}
+
+.acg-ticket__head-cat {
+  font-family: @font-mono;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: none;
+  color: @light;
+  padding: 4px 8px;
+  background: rgba(255, 226, 201, 0.12);
+  border-radius: 999px;
+}
+
+.acg-ticket__body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.acg-ticket__foot {
+  margin-top: 14px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 226, 201, 0.18);
+}
+
+.acg-ticket__foot-hero {
+  font-family: @font-grotesque;
+  font-weight: 900;
+  font-size: 40px;
+  line-height: 0.94;
+  letter-spacing: -0.04em;
+  color: @orange;
+  text-transform: capitalize;
+  white-space: pre-wrap;
+}
+
+.acg-ticket__foot-mark {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  font-family: @font-grotesque;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: @light;
+}
+
+.acg-ticket__mono {
+  font-family: @font-grotesque;
+  font-weight: 900;
+  font-size: 14px;
+  letter-spacing: -0.02em;
+  color: @light;
+}
+
+// ===== Display type =====
+
+.acg-display {
+  margin: 0;
+  font-family: @font-grotesque;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 0.94;
+  color: @light;
+  text-transform: capitalize;
+}
+
+.acg-display--hero {
+  font-size: 64px;
+  letter-spacing: -0.045em;
+}
+
+.acg-display--xl {
+  font-size: 50px;
+  letter-spacing: -0.04em;
+}
+
+.acg-display--lg {
+  font-size: 36px;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+}
+
+.acg-display--orange { color: @orange; }
+
+// ===== Perforation divider =====
+
+.acg-perf {
+  height: 1px;
+  background: repeating-linear-gradient(to right,
+    rgba(255, 226, 201, 0.5) 0 6px, transparent 6px 12px);
+  width: 100%;
+  position: relative;
+  margin: 4px 0;
+}
+
+// ===== Field grid (labels + values) =====
+
+.acg-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 18px;
+}
+
+.acg-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.acg-field__label {
+  font-family: @font-grotesque;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 226, 201, 0.55);
+  font-weight: 700;
+}
+
+.acg-field__value {
+  font-family: @font-grotesque;
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -0.015em;
+  color: @orange;
+  line-height: 1.05;
+  &.is-mono {
+    font-family: @font-mono;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.04em;
+  }
+}
+
+// ===== Tracks (input + result) =====
+
+.acg-tracks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.acg-track-in {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 226, 201, 0.18);
+  &:last-child { border-bottom: none; }
+}
+
+.acg-track-in__n {
+  font-family: @font-mono;
+  font-size: 13px;
+  color: rgba(255, 226, 201, 0.55);
+  letter-spacing: 0.06em;
+}
+
+.acg-track-in__field {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: @orange;
+  font-family: @font-grotesque;
+  font-weight: 800;
+  font-size: 26px;
+  letter-spacing: -0.025em;
+  padding: 4px 0 4px;
+  width: 100%;
+  caret-color: @orange;
+  &::placeholder {
+    color: rgba(255, 226, 201, 0.30);
+    font-weight: 700;
+  }
+}
+
+.acg-track-row {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 226, 201, 0.18);
+  &:last-child { border-bottom: none; }
+}
+
+.acg-track-row__n {
+  font-family: @font-mono;
+  font-size: 13px;
+  color: rgba(255, 226, 201, 0.55);
+  letter-spacing: 0.06em;
+}
+
+.acg-track-row__name {
+  font-family: @font-grotesque;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: -0.025em;
+  color: @light;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.acg-track-row__time {
+  font-family: @font-mono;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  color: @orange;
+  font-weight: 700;
+}
+
+// ===== Press button =====
+
+.acg-press {
+  margin-top: 8px;
+  appearance: none;
+  width: 100%;
+  background: @orange;
+  color: @ink;
+  border: none;
+  padding: 18px 22px;
+  font-family: @font-grotesque;
+  font-weight: 900;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  text-transform: capitalize;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: transform 120ms ease, background 160ms ease, color 160ms ease;
+  &:active { transform: translateY(2px); }
+  &.is-pulse { animation: acg-press-pulse 1900ms ease-in-out infinite; }
+}
+
+.acg-press__arrow {
+  font-family: @font-grotesque;
+  font-weight: 900;
+  font-size: 24px;
+}
+
+@keyframes acg-press-pulse {
+  0%, 100% { transform: translateY(0); background: @orange; }
+  50%      { transform: translateY(-2px); background: @orange-hot; }
+}
+
+// ===== Cover panel =====
+
+.acg-cover-panel {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: @ink;
+}
+
+.acg-cover-panel__art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.acg-cover-panel__chip {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(10, 10, 10, 0.65);
+  color: @light;
+  padding: 6px 10px;
+  font-family: @font-grotesque;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 700;
+  backdrop-filter: blur(2px);
+  border-radius: 999px;
+}
+
+.acg-cover-panel__cat {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  background: @orange;
+  color: @ink;
+  padding: 4px 10px;
+  font-family: @font-grotesque;
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: -0.01em;
+  border-radius: 999px;
+}
+
+.acg-cover-panel--pressing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 50% 50%,
+      rgba(255, 226, 201, 0.04) 0%,
+      transparent 60%),
+    @ink;
+}
+
+// Very light filter — keep the AI art's character.
+.acg-cover-panel__art--shoegaze { filter: contrast(1.02) saturate(0.92); }
+.acg-cover-panel__art--xerox    { filter: contrast(1.08); }
+
+// ===== Result headline block =====
+
+.acg-result-headline {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+// ===== Error / hint =====
+
+.acg-err {
+  font-family: @font-grotesque;
+  font-size: 13px;
+  letter-spacing: -0.005em;
+  color: @orange;
+  font-weight: 700;
+}
+
+.acg-hint {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  font-family: @font-grotesque;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: @ink;
+  font-weight: 700;
+  pointer-events: none;
+  animation: acg-hint-fade 2400ms ease-in-out infinite;
+}
+
+@keyframes acg-hint-fade {
+  0%, 100% { opacity: 0.36; }
+  50%      { opacity: 0.95; }
+}
+
+// ===== Loading spinner (vinyl) =====
+
+.acg-spinner {
+  width: 60%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(circle at center,
+      #060503 0px, #060503 1.5px, #1a1612 1.6px, #1a1612 3px),
+    radial-gradient(circle at center, #2a221b 0%, #060503 70%);
+  position: relative;
+  &.is-spinning { animation: acg-vinyl-spin 3.6s linear infinite; }
+}
+
+.acg-spinner__label {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 38%;
+  height: 38%;
+  border-radius: 50%;
+  background: @orange;
+}
+
+.acg-spinner__hole {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 5%;
+  height: 5%;
+  border-radius: 50%;
+  background: @ink;
+}
+
+@keyframes acg-vinyl-spin {
+  from { transform: rotate(0); }
+  to   { transform: rotate(360deg); }
+}
+
+.acg-loading-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 226, 201, 0.15);
+  overflow: hidden;
+  margin-top: 6px;
+  > span {
+    display: block;
+    width: 35%;
+    height: 100%;
+    background: @orange;
+    animation: acg-bar-slide 1700ms ease-in-out infinite;
+  }
+}
+
+@keyframes acg-bar-slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(340%); }
+}
+
+// ===== Buttons =====
+
+.acg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.acg-btn {
+  appearance: none;
+  border: 1.5px solid @light;
+  background: transparent;
+  color: @light;
+  padding: 11px 18px;
+  font-family: @font-grotesque;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: -0.005em;
+  text-transform: capitalize;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: opacity 140ms ease, background 140ms ease, color 140ms ease, transform 140ms ease;
+  &:active { transform: translateY(1px); }
+  &:disabled { opacity: 0.45; cursor: default; }
+
+  &.acg-btn--solid {
+    background: @orange;
+    color: @ink;
+    border-color: @orange;
+  }
+  &.acg-btn--ghost { background: transparent; }
+}
+
+// Reveal animation for the result phase.
+.acg-reveal {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 600ms ease, transform 600ms ease;
+  &.is-revealed { opacity: 1; transform: translateY(0); }
+}
+
+// ===== Wall =====
+
+.acg-back-pill {
+  align-self: flex-start;
+  appearance: none;
+  background: transparent;
+  color: @light;
+  border: 1px solid rgba(255, 226, 201, 0.3);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-family: @font-grotesque;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-top: -4px;
+}
+
+.acg-wall-sub {
+  margin: 4px 0 0;
+  font-family: @font-grotesque;
+  font-size: 13px;
+  color: rgba(255, 226, 201, 0.65);
+  font-weight: 500;
+}
+
+.acg-wall-empty {
+  text-align: center;
+  padding: 32px 0;
+  font-family: @font-grotesque;
+  color: rgba(255, 226, 201, 0.55);
+  font-size: 14px;
+  font-style: italic;
+}
+
+.acg-wall-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.acg-wall-list > li + li {
+  border-top: 1px solid rgba(255, 226, 201, 0.18);
+}
+
+.acg-wall-row {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 12px 0;
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 80px 1fr 22px;
+  gap: 14px;
+  align-items: center;
+  &:active { transform: scale(0.99); }
+}
+
+.acg-wall-row__cover {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  display: block;
+  background: @ink;
+}
+
+.acg-wall-row__info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.acg-wall-row__band {
+  font-family: @font-grotesque;
+  font-weight: 900;
+  font-size: 19px;
+  letter-spacing: -0.025em;
+  color: @light;
+  text-transform: capitalize;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.05;
+}
+
+.acg-wall-row__title {
+  font-family: @font-grotesque;
+  font-weight: 800;
+  font-size: 14px;
+  color: @orange;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.acg-wall-row__meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-family: @font-mono;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: rgba(255, 226, 201, 0.5);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.acg-wall-row__arrow {
+  font-family: @font-grotesque;
+  font-weight: 900;
+  color: @orange;
+  font-size: 18px;
+}
+
+// Wall modal — focused single LP.
+.acg-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 10, 0.86);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  padding: 20px;
+}
+
+.acg-modal__card {
+  width: 100%;
+  max-width: 380px;
+  background: @ink;
+  border: 1.5px solid @orange;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.acg-modal__cover {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+  background: @ink;
+}
+
+.acg-modal__band {
+  font-family: @font-grotesque;
+  font-weight: 900;
+  font-size: 26px;
+  letter-spacing: -0.03em;
+  color: @light;
+  line-height: 0.96;
+  text-transform: capitalize;
+}
+
+.acg-modal__title {
+  font-family: @font-grotesque;
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: -0.025em;
+  color: @orange;
+  margin-top: -2px;
+}
+
+.acg-modal__tracks {
+  list-style: none;
+  margin: 4px 0;
+  padding: 0;
+  > li {
+    display: grid;
+    grid-template-columns: 30px 1fr auto;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(255, 226, 201, 0.16);
+    align-items: baseline;
+    > :nth-child(1) { font-family: @font-mono; font-size: 11px; color: rgba(255,226,201,0.55); letter-spacing: 0.06em; }
+    > :nth-child(2) { font-family: @font-grotesque; font-weight: 800; font-size: 17px; letter-spacing: -0.02em; color: @light; }
+    > :nth-child(3) { font-family: @font-mono; font-size: 12px; color: @orange; letter-spacing: 0.04em; }
+  }
+}
+
+// ===== User chip =====
+
+.acg-user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: @font-grotesque;
+  font-size: 12px;
+  letter-spacing: -0.005em;
+  color: rgba(255, 226, 201, 0.7);
+  align-self: flex-start;
+}
+
+.acg-user-chip__avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.acg-user-chip__avatar--mono {
+  background: @orange;
+  color: @ink;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.acg-user-chip__name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 130px;
+}
