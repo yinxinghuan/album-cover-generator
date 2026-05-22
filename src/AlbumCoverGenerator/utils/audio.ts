@@ -79,7 +79,46 @@ export function playRevealChord(): void {
   if (!ac) return;
   const now = ac.currentTime;
 
-  // A washed-out major-7 pad. Detuned sines + slow attack.
+  // ── 1. Celebratory shimmer arpeggio at t=0 ──
+  // Bright ascending bell-like sparkle over ~0.7s. Marks the moment
+  // of "pressed!" Bell timbre = sine + slight triangle harmonic with
+  // fast attack + ~400ms exponential decay. Notes climb an A-major
+  // pentatonic ladder so it feels triumphant without being saccharine.
+  //
+  //  A4 → C#5 → E5 → A5 → C#6 → E6
+  const sparkle = [440, 554.37, 659.25, 880, 1108.73, 1318.51];
+  const sparkleMaster = ac.createGain();
+  sparkleMaster.gain.value = 0.32;
+  const sparkleHp = ac.createBiquadFilter();
+  sparkleHp.type = 'highpass';
+  sparkleHp.frequency.value = 380;
+  sparkleMaster.connect(sparkleHp).connect(ac.destination);
+
+  sparkle.forEach((freq, i) => {
+    const t = now + i * 0.085;
+    // sine fundamental
+    const oSine = ac.createOscillator();
+    oSine.type = 'sine';
+    oSine.frequency.value = freq;
+    // triangle 2-octave harmonic for bell shimmer
+    const oTri = ac.createOscillator();
+    oTri.type = 'triangle';
+    oTri.frequency.value = freq * 2;
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.55, t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.55);
+    const gTri = ac.createGain();
+    gTri.gain.value = 0.18;
+    oSine.connect(g).connect(sparkleMaster);
+    oTri.connect(gTri).connect(g);
+    oSine.start(t);
+    oSine.stop(t + 0.6);
+    oTri.start(t);
+    oTri.stop(t + 0.6);
+  });
+
+  // ── 2. Atmospheric Amaj7 pad swells in underneath ──
   // Root: A3 (220Hz). Voicing: A C# E G# (1 3 5 7).
   const notes = [220, 277.18, 329.63, 415.30];
 
