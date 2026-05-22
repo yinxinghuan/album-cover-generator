@@ -41,8 +41,13 @@ export default function CoverPlaceholder({ variant, catalog, design }: Props) {
         </div>
       )}
       {variant === 'pressing' && design && (
-        <div className="acg-vinyl" key="pressing">
+        <div className="acg-vinyl acg-vinyl--pressing" key="pressing">
           <RealisticVinyl design={design} catalog={catalog} spinning inserting />
+          <svg className="acg-vinyl__ring" viewBox="0 0 100 100" aria-hidden>
+            <circle cx="50" cy="50" r="49" className="acg-vinyl__ring-track" />
+            <circle cx="50" cy="50" r="49" className="acg-vinyl__ring-fill"
+                    transform="rotate(-90 50 50)" />
+          </svg>
         </div>
       )}
       {variant !== 'pressing' && (

@@ -877,6 +877,44 @@
   &.is-spinning { animation: acg-vinyl-spin 3.6s linear infinite; }
 }
 
+// ─── Pressing variant: progress ring orbits the vinyl ───
+// The orange arc fills once over the pressing window (~55s).
+// Sits OUTSIDE the disc so it reads as a separate halo, not part
+// of the record.
+.acg-vinyl--pressing { /* nothing extra on the shell itself */ }
+
+.acg-vinyl__ring {
+  position: absolute;
+  inset: -10px;
+  width: calc(100% + 20px);
+  height: calc(100% + 20px);
+  pointer-events: none;
+  overflow: visible;
+  z-index: 3;
+}
+
+.acg-vinyl__ring-track {
+  fill: none;
+  stroke: rgba(255, 226, 201, 0.12);
+  stroke-width: 0.7;
+}
+
+.acg-vinyl__ring-fill {
+  fill: none;
+  stroke: @orange;
+  stroke-width: 1.0;
+  stroke-linecap: round;
+  // Circumference of r=49 ≈ 307.876
+  stroke-dasharray: 307.876;
+  stroke-dashoffset: 307.876;
+  animation: acg-vinyl-ring 55s linear forwards;
+  filter: drop-shadow(0 0 2px rgba(245, 177, 199, 0.65));
+}
+
+@keyframes acg-vinyl-ring {
+  to { stroke-dashoffset: 0; }
+}
+
 // ─── Variant A: Bauhaus / instruction-manual ───
 .acg-vinyl__svg {
   width: 100%;
@@ -1538,71 +1576,61 @@
   }
 }
 
-// ===== Pressing progress (compact, sits right under vinyl) =====
+// ===== Pressing screen typography =====
 //
-// 5 thin segment bars + active step name above. Sized so the vinyl +
-// progress + footer all fit one viewport. Replaces the longer
-// vertical process timeline that looked like the input track list.
+// Whole pressing screen is composed as one centered editorial cluster:
+//
+//     [ring-wrapped vinyl]
+//
+//        STEP NAME (tracked caps)
+//        fineprint (mono dim)
+//
+// The orange ring around the vinyl IS the progress indicator — fills
+// once over the ~55s pressing window. No separate bar; the vinyl
+// itself carries time + step (via label change).
 
-.acg-press-progress {
+// Loading-screen stage: vinyl + caption cluster vertically centered
+// inside the remaining ticket body. Pulls the composition toward the
+// optical center instead of stacking everything at the top.
+.acg-press-stage {
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 4px;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  min-height: 0;
 }
 
-.acg-press-progress__label {
+.acg-press-caption {
   display: flex;
-  align-items: baseline;
-  gap: 12px;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.acg-press-caption__name {
   font-family: @font-grotesque;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: @light;
+  animation: acg-press-name-in 320ms ease both;
 }
 
-.acg-press-progress__step {
+.acg-press-caption__hint {
   font-family: @font-mono;
-  font-size: 11px;
-  letter-spacing: 0.10em;
-  color: rgba(255, 226, 201, 0.55);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: rgba(255, 226, 201, 0.38);
+  text-transform: uppercase;
 }
 
-.acg-press-progress__name {
-  font-weight: 800;
-  font-size: 17px;
-  letter-spacing: -0.015em;
-  color: @orange;
-  text-transform: capitalize;
-}
-
-.acg-press-progress__track {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
-}
-
-.acg-press-progress__seg {
-  height: 4px;
-  background: rgba(255, 226, 201, 0.18);
-  border-radius: 2px;
-  position: relative;
-  overflow: hidden;
-  &.is-done {
-    background: @orange;
-  }
-  &.is-active {
-    background: rgba(255, 226, 201, 0.18);
-    &::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: @orange;
-      animation: acg-press-fill 11s linear forwards;
-    }
-  }
-}
-
-@keyframes acg-press-fill {
-  from { transform: translateX(-100%); }
-  to   { transform: translateX(0); }
+@keyframes acg-press-name-in {
+  from { opacity: 0; transform: translateY(3px); letter-spacing: 0.10em; }
+  to   { opacity: 1; transform: translateY(0);   letter-spacing: 0.26em; }
 }
 
 .acg-fineprint--center {
