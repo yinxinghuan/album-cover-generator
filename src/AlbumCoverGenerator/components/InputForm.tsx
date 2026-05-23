@@ -151,10 +151,10 @@ export default function InputForm({ onSubmit, onWall, pressed, hasFirstTouched }
             autoComplete="off"
             autoCapitalize="none"
             enterKeyHint={step < 2 ? 'next' : 'done'}
-            maxLength={50}
+            maxLength={120}
             placeholder={placeholders[step]}
             value={currentValue}
-            onChange={(e) => setters[step](e.target.value.replace(/\s+/g, ' ').slice(0, 50))}
+            onChange={(e) => setters[step](e.target.value.replace(/\s+/g, ' ').slice(0, 120))}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); next(); } }}
           />
         </div>
