@@ -481,6 +481,127 @@
   }
 }
 
+// ===== Wizard input (one track at a time) =====
+//
+// Mobile keyboards cover roughly half the viewport. The earlier layout
+// stacked all three track inputs vertically, so once the keyboard opened
+// only the focused row remained visible. The wizard shows a single
+// persistent input element whose value/placeholder swap on step change —
+// the input is never re-mounted, so iOS keeps the keyboard open across
+// transitions.
+
+.acg-wizard {
+  margin: 6px 0 2px;
+}
+
+.acg-wizard__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.acg-wizard__step-label {
+  font-family: @font-mono;
+  font-size: 13px;
+  color: rgba(255, 226, 201, 0.55);
+  letter-spacing: 0.08em;
+  // re-key on step change → re-fires the animation
+  animation: acg-wizard-label-in 240ms ease-out;
+}
+
+@keyframes acg-wizard-label-in {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.acg-wizard__dots {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.acg-wizard__dot {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: 1.5px solid rgba(255, 226, 201, 0.45);
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  padding: 0;
+  cursor: pointer;
+  // Generous tap target without bloating layout.
+  position: relative;
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -10px;
+  }
+  transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.acg-wizard__dot--filled {
+  background: rgba(255, 226, 201, 0.55);
+  border-color: rgba(255, 226, 201, 0.55);
+}
+
+.acg-wizard__dot--active {
+  background: @orange;
+  border-color: @orange;
+  transform: scale(1.25);
+}
+
+.acg-wizard__field-wrap {
+  position: relative;
+  padding: 8px 0 10px;
+  border-bottom: 1px solid rgba(255, 226, 201, 0.18);
+}
+
+.acg-wizard__pulse {
+  // Animated underline that re-fires on every step change. Quick visual
+  // confirmation that the field advanced.
+  position: absolute;
+  left: 50%;
+  bottom: -1px;
+  width: 0;
+  height: 2px;
+  background: @orange;
+  transform: translateX(-50%);
+  animation: acg-wizard-pulse 360ms ease-out;
+  pointer-events: none;
+}
+
+@keyframes acg-wizard-pulse {
+  0%   { width: 0;    opacity: 0.0; }
+  40%  { width: 60%;  opacity: 1;   }
+  100% { width: 0;    opacity: 0;   }
+}
+
+.acg-wizard__field {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: @orange;
+  font-family: @font-grotesque;
+  font-weight: 800;
+  font-size: 30px;
+  letter-spacing: -0.025em;
+  padding: 4px 0;
+  width: 100%;
+  caret-color: @orange;
+  // Keep clearance above the on-screen keyboard on older iOS that ignores
+  // the `interactive-widget` viewport hint.
+  scroll-margin-bottom: 160px;
+  &::placeholder {
+    color: rgba(255, 226, 201, 0.30);
+    font-weight: 700;
+  }
+}
+
 .acg-track-row {
   display: grid;
   grid-template-columns: 36px 1fr auto;

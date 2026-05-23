@@ -108,6 +108,9 @@ const en: Dict = {
   footer_hero_pressing: 'pressing now',
   footer_hero_done: 'limited pressing',
   footer_hero_wall: 'crate digging',
+
+  // Wizard (track-by-track input)
+  wizard_next: 'next track',
 };
 
 const zh: Dict = {
@@ -187,6 +190,8 @@ const zh: Dict = {
   footer_hero_pressing: '压片进行中',
   footer_hero_done: '限量压片',
   footer_hero_wall: '翻箱',
+
+  wizard_next: '下一曲',
 };
 
 const es: Dict = {
@@ -266,6 +271,8 @@ const es: Dict = {
   footer_hero_pressing: 'prensando ahora',
   footer_hero_done: 'prensa limitada',
   footer_hero_wall: 'cavar cajas',
+
+  wizard_next: 'siguiente pista',
 };
 
 const pt: Dict = {
@@ -345,6 +352,8 @@ const pt: Dict = {
   footer_hero_pressing: 'prensando agora',
   footer_hero_done: 'prensa limitada',
   footer_hero_wall: 'caçar discos',
+
+  wizard_next: 'próxima faixa',
 };
 
 const ru: Dict = {
@@ -424,6 +433,8 @@ const ru: Dict = {
   footer_hero_pressing: 'идёт пресс',
   footer_hero_done: 'лимитированный пресс',
   footer_hero_wall: 'рыться в крейте',
+
+  wizard_next: 'следующий трек',
 };
 
 const ja: Dict = {
@@ -503,6 +514,8 @@ const ja: Dict = {
   footer_hero_pressing: 'プレス中',
   footer_hero_done: '限定プレス',
   footer_hero_wall: 'クレート漁り',
+
+  wizard_next: '次の曲',
 };
 
 const ko: Dict = {
@@ -582,6 +595,8 @@ const ko: Dict = {
   footer_hero_pressing: '프레스 중',
   footer_hero_done: '한정 프레스',
   footer_hero_wall: '크레이트 디깅',
+
+  wizard_next: '다음 곡',
 };
 
 const fr: Dict = {
@@ -661,6 +676,8 @@ const fr: Dict = {
   footer_hero_pressing: 'pressage en cours',
   footer_hero_done: 'pressage limité',
   footer_hero_wall: 'fouille de bacs',
+
+  wizard_next: 'piste suivante',
 };
 
 const DICTS: Record<Locale, Dict> = { en, zh, es, pt, ru, ja, ko, fr };
