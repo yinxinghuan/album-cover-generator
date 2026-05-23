@@ -75,12 +75,27 @@ export default function InputForm({ onSubmit, onWall, pressed, hasFirstTouched }
   // Footer hero: "next track" on steps 0/1, "order a pressing" on step 2.
   const footerHeroLabel = step < 2 ? t('wizard_next') : t('footer_hero_in');
 
+  // Reveal-or-advance: on the landing screen the wizard input sits below
+  // the fold, so a first tap of the footer hero has nothing to advance.
+  // Focus the input (iOS pops the keyboard and scrolls the field above
+  // it; scroll-margin-bottom gives the headroom) and add an explicit
+  // scrollIntoView for non-iOS. Must run synchronously inside the
+  // pointerdown handler so the focus() counts as a user gesture.
+  const handleFooterHero = () => {
+    if (canAdvance) {
+      next();
+      return;
+    }
+    inputRef.current?.focus();
+    inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
   return (
     <Ticket
       topLabel={t('ticket_label_in')}
       catalog={cat}
       footerHero={footerHeroLabel}
-      onFooterHeroClick={next}
+      onFooterHeroClick={handleFooterHero}
       footerLeftAction={{ label: t('wall_link'), onClick: onWall }}
     >
       <CoverPlaceholder
