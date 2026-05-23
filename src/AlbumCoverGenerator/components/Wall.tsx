@@ -7,7 +7,7 @@ import { t } from '../i18n';
 import { genreFor } from '../utils/catalog';
 import { vinylFor } from '../utils/vinyl';
 import { fallbackTotal, dominantReaction, reactionAggregateEvent } from '../utils/reactions';
-import { openAigramProfile, isInAigram } from '@shared/runtime/bridge';
+import { openAigramProfile, isInAigram, telegramId } from '@shared/runtime/bridge';
 import { useGameStats } from '@shared/runtime/useGameStats';
 import type { Album, ReactionKind, WallEntry } from '../types';
 
@@ -34,18 +34,28 @@ export default function Wall({ community, mine, loaded, myReactions, onBack, onV
   const reactionsOf = (id: string): Set<ReactionKind> =>
     myReactions.get(id) ?? new Set<ReactionKind>();
 
-  // MY → chronological (newest first, already that way in mine[]).
-  // ALL → community order. The platform doesn't expose a sort-by-count
-  // endpoint without fetching N stats first, so we keep the wall's
-  // server order (most recent N users) and let the per-row useGameStats
-  // hooks render the real counts independently.
+  // MY  → all my local albums, newest first (mine[] is already sorted).
+  // ALL → my full local history + community (others' latest, ≤6 users)
+  //       interleaved by createdAt. The platform's get/data/list only
+  //       returns the LATEST save per user, so for users like me who've
+  //       pressed N>1 records, community contributes just one entry per
+  //       person. Without this merge, ALL ends up SMALLER than MINE
+  //       because community drops my older pressings.
+  const myTid = telegramId ? String(telegramId) : '';
   const entries: WallEntry[] = useMemo(() => {
     if (scope === 'my') {
       return mine.map((a) => ({ userId: 'self', userName: 'You', album: a }));
     }
-    return community;
+    const myEntries: WallEntry[] = mine.map((a) => ({ userId: 'self', userName: 'You', album: a }));
+    // Strip any community row that's authored by the current user — those
+    // are duplicates of the latest entry already in mine[].
+    const others = myTid ? community.filter((e) => e.userId !== myTid) : community;
+    // Sort the union by createdAt desc (most recent first).
+    return [...myEntries, ...others].sort(
+      (a, b) => (b.album.createdAt || 0) - (a.album.createdAt || 0),
+    );
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scope, mine, community]);
+  }, [scope, mine, community, myTid]);
 
   const total = entries.length;
 
