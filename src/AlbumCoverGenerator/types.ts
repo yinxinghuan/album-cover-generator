@@ -32,9 +32,14 @@ export interface VinylDesign {
   labelArt?: LabelArt;
 }
 
-export type PadTone  = 'warm' | 'icy' | 'crunchy';
-export type BassTone = 'sub'  | 'plucked' | 'fuzz';
-export type DrumTone = 'soft' | 'kick' | 'none';
+// Tone palettes. Each value is its own synth recipe in utils/music.ts.
+// New additions: bell + breath pads, upright + acid basses, punk + dub
+// drums — these unlock drastically different genre vibes (death-metal,
+// vaporwave, dub-reggae, lo-fi, classical, etc.) on top of the original
+// shoegaze/post-punk pair.
+export type PadTone  = 'warm' | 'icy' | 'crunchy' | 'bell' | 'breath';
+export type BassTone = 'sub'  | 'plucked' | 'fuzz' | 'upright' | 'acid';
+export type DrumTone = 'soft' | 'kick' | 'none' | 'punk' | 'dub';
 
 export interface MusicSpec {
   /** Tempo in BPM. */

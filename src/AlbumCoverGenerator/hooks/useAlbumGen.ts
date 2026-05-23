@@ -66,11 +66,9 @@ export function useAlbumGen(): UseAlbumGen {
       const wordsLine = words.map(w => w.trim()).filter(Boolean).join(', ');
       const namingPrompt = `Three theme words: ${wordsLine}`;
 
-      // 4 parallel chat calls: band name, title, music spec, and cover
-      // spec (genre + subtitle + full image prompt). The cover spec
-      // depends on band + title for text rendering, so it gets resolved
-      // after those two return (still happens during the chat phase).
-      const [bandName, title, music] = await Promise.all([
+      // Parallel chat: band name + title. Cover spec needs both for the
+      // text-rendering instructions, so it runs after they return.
+      const [bandName, title] = await Promise.all([
         (async () => {
           try {
             return cleanLine(await chatOnce(BAND_NAME_SYSTEM, namingPrompt))
@@ -87,19 +85,9 @@ export function useAlbumGen(): UseAlbumGen {
             return defaultTitle(words);
           }
         })(),
-        (async (): Promise<MusicSpec> => {
-          try {
-            const musicPrompt = `Three theme words: ${wordsLine}`;
-            return parseMusicSpec(await chatOnce(MUSIC_GEN_SYSTEM, musicPrompt));
-          } catch {
-            return parseMusicSpec('');
-          }
-        })(),
       ]);
 
-      // Cover spec runs after band + title are known so the prompt can
-      // bind them into the text-rendering instructions. Still fast — it's
-      // chat, not image gen.
+      // Cover spec — picks the genre slug, subtitle, and image prompt.
       const coverSpec = await (async () => {
         try {
           const coverInput = `Three theme words: ${wordsLine}
@@ -116,8 +104,22 @@ Album title: ${title}`;
 
       setStage('pressing');
 
+      // Image gen (slow, ~30s) and music spec (fast chat) run in parallel.
+      // Music gen now sees the cover genre slug so the synth instruments
+      // match the visual style (e.g. cover = death-metal → fuzz bass +
+      // punk drum, cover = ambient-newage → breath pad + no drum).
       try {
-        const imageUrl = await genImg({ prompt: coverSpec.imagePrompt });
+        const musicPromise = (async (): Promise<MusicSpec> => {
+          try {
+            const musicPrompt = `Three theme words: ${wordsLine}
+Cover style: ${coverSpec.style}`;
+            return parseMusicSpec(await chatOnce(MUSIC_GEN_SYSTEM, musicPrompt));
+          } catch {
+            return parseMusicSpec('');
+          }
+        })();
+        const imagePromise = genImg({ prompt: coverSpec.imagePrompt });
+        const [music, imageUrl] = await Promise.all([musicPromise, imagePromise]);
         // Pre-download + decode the cover so it's warm in the browser
         // cache by the time the result page mounts. Without this, the
         // result frame appears with a black sleeve and the image only
