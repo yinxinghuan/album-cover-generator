@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useGameSave } from '@shared/save';
-import { isInAigram } from '@shared/runtime';
+import { isInAigram, useGameEvent } from '@shared/runtime';
 import InputForm from './components/InputForm';
 import CoverLoading from './components/CoverLoading';
 import CoverResult from './components/CoverResult';
@@ -155,11 +155,26 @@ export default function AlbumCoverGenerator() {
     }
     return out;
   })();
+  // Real cross-user reactions: each (album, kind) is a platform event;
+  // an extra aggregate `react:<albumId>` event tracks unique reactors
+  // per album so the wall can show a single number per row.
+  // ONE-WAY: the platform increments only — no decrement API exists,
+  // so a tap on an already-reacted kind is a no-op. Surface this in
+  // UI as a permanently-active button state.
+  const events = useGameEvent();
   const reactionsFor = (id: string) => myReactions.get(id) ?? new Set<import('./types').ReactionKind>();
   const toggleReaction = (albumId: string, kind: import('./types').ReactionKind) => {
     const current = new Set(myReactions.get(albumId) ?? []);
-    if (current.has(kind)) current.delete(kind);
-    else current.add(kind);
+    if (current.has(kind)) return; // tap-once, no untap
+    const isFirstReactionOnAlbum = current.size === 0;
+    current.add(kind);
+    // Fire-and-forget platform events. The matching useGameStats hooks
+    // in CoverResult / WallRow re-fetch after a short delay so the
+    // count visually reflects the +1.
+    events.trigger(`react:${albumId}:${kind}`);
+    if (isFirstReactionOnAlbum) events.trigger(`react:${albumId}`);
+    // Persist locally so the active state survives reload + so we know
+    // not to re-trigger the same event on subsequent taps.
     const reactions: Record<string, import('./types').ReactionKind[]> = {};
     for (const [id, kinds] of myReactions) {
       if (id === albumId) reactions[id] = [...current];

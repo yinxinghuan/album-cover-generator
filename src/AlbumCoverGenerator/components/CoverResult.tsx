@@ -6,8 +6,9 @@ import { t } from '../i18n';
 import { trackTime, genreFor } from '../utils/catalog';
 import { vinylFor, vinylDesignLabel } from '../utils/vinyl';
 import { playMusic, parseMusicSpec, type MusicHandle } from '../utils/music';
-import { reactionCount } from '../utils/reactions';
-import { openAigramProfile } from '@shared/runtime/bridge';
+import { fallbackCount, reactionEvent } from '../utils/reactions';
+import { openAigramProfile, isInAigram } from '@shared/runtime/bridge';
+import { useGameStats } from '@shared/runtime/useGameStats';
 import { REACTION_KINDS, type Album, type ReactionKind } from '../types';
 
 interface Props {
@@ -206,25 +207,11 @@ export default function CoverResult({
         </ol>
 
         {isPlayMode && onToggleReaction && (
-          <div className="acg-reactions" role="group" aria-label="reactions">
-            {REACTION_KINDS.map((k) => {
-              const active = reactions.has(k);
-              const count = reactionCount(album.id, k, active);
-              return (
-                <button
-                  key={k}
-                  type="button"
-                  className={`acg-reaction ${active ? 'is-on' : ''}`}
-                  onPointerDown={() => onToggleReaction(k)}
-                  aria-pressed={active}
-                  aria-label={k}
-                >
-                  <ReactionIcon kind={k} size={14} className="acg-reaction__icon" />
-                  <span className="acg-reaction__count">{count}</span>
-                </button>
-              );
-            })}
-          </div>
+          <ReactionsBar
+            album={album}
+            mine={reactions}
+            onReact={onToggleReaction}
+          />
         )}
 
         {onShare && (
@@ -236,6 +223,59 @@ export default function CoverResult({
           </div>
         )}
       </Ticket>
+    </div>
+  );
+}
+
+// Reaction bar — 4 buttons (heart / fire / mind / eye), each backed by
+// its own platform event. Counts come from get/play/stats; refreshed
+// shortly after the user reacts so the +1 appears.
+//
+// One-way: a kind that's already in `mine` shows the active state and
+// taps are no-ops (the platform has no decrement API; surfacing this
+// as "you've already reacted" keeps the UI honest).
+function ReactionsBar({ album, mine, onReact }: {
+  album: Album;
+  mine: Set<ReactionKind>;
+  onReact: (k: ReactionKind) => void;
+}) {
+  const heart = useGameStats(reactionEvent(album.id, 'heart'));
+  const fire  = useGameStats(reactionEvent(album.id, 'fire'));
+  const mind  = useGameStats(reactionEvent(album.id, 'mind'));
+  const eye   = useGameStats(reactionEvent(album.id, 'eye'));
+  const stats: Record<ReactionKind, { stats: { total_user_count: number }; refresh: () => Promise<void> }> = {
+    heart, fire, mind, eye,
+  };
+  const handleTap = (k: ReactionKind) => {
+    if (mine.has(k)) return;       // already reacted — no-op
+    onReact(k);                    // trigger platform event + persist locally
+    // Give the platform ~1.2s to count the trigger, then refetch so
+    // the displayed number reflects the new +1.
+    window.setTimeout(() => { void stats[k].refresh(); }, 1200);
+  };
+  return (
+    <div className="acg-reactions" role="group" aria-label="reactions">
+      {REACTION_KINDS.map((k) => {
+        const active = mine.has(k);
+        const real = stats[k].stats.total_user_count;
+        // Off-platform fallback: deterministic baseline so dev preview
+        // still looks alive.
+        const count = isInAigram ? real : fallbackCount(album.id, k, active);
+        return (
+          <button
+            key={k}
+            type="button"
+            className={`acg-reaction ${active ? 'is-on' : ''}`}
+            onPointerDown={() => handleTap(k)}
+            aria-pressed={active}
+            aria-label={k}
+            disabled={active}  // permanently active once reacted
+          >
+            <ReactionIcon kind={k} size={14} className="acg-reaction__icon" />
+            <span className="acg-reaction__count">{count}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

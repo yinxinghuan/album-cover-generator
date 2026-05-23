@@ -1,13 +1,25 @@
-// Per-reaction count helper. Same baseline+mine model as the original
-// likes file — each (album, reaction kind) pair gets its own procedural
-// count, and the current user's own reaction adds +1.
+// Reactions: real cross-user counts via the platform's record/play +
+// get/play/stats events. Each (album, kind) is an event; an aggregate
+// `react:<albumId>` event tracks unique reactors per album so the wall
+// can show a single count per row without fetching 4 per-kind stats.
 //
-// v2 platform integration (real cross-user aggregation) is still pending;
-// this file is intentionally local-only so the UI can render counts
-// without backend dependencies.
+// Off-platform (dev preview, demo URLs) the helpers below produce a
+// deterministic procedural baseline so the UI doesn't look dead.
 
 import type { ReactionKind } from '../types';
 import { REACTION_KINDS } from '../types';
+
+// ───────────────────── Event names ─────────────────────
+
+export function reactionEvent(albumId: string, kind: ReactionKind): string {
+  return `react:${albumId}:${kind}`;
+}
+
+export function reactionAggregateEvent(albumId: string): string {
+  return `react:${albumId}`;
+}
+
+// ───────────────────── Fallback (off-platform) ─────────────────────
 
 function djb2(s: string): number {
   let h = 5381;
@@ -17,8 +29,10 @@ function djb2(s: string): number {
   return Math.abs(h);
 }
 
-/** Per-reaction baseline (deterministic per album + kind). Heart is the
- *  most common; fire/mind/eye decay so the "rare" reactions feel rare. */
+/** Per-reaction baseline (deterministic per album + kind). Used only
+ *  as a fallback when the game is running outside Aigram (no platform
+ *  stats available). Heart is the most common; fire/mind/eye skew
+ *  rarer for visual variety. */
 export function baselineCount(albumId: string, kind: ReactionKind): number {
   const h = djb2(`react:${kind}:${albumId}`);
   const skew = kind === 'heart' ? 1.6 : kind === 'fire' ? 2.4 : kind === 'mind' ? 3.0 : 3.4;
@@ -26,24 +40,26 @@ export function baselineCount(albumId: string, kind: ReactionKind): number {
   return Math.floor(Math.pow(exp, skew) * (kind === 'heart' ? 130 : 70));
 }
 
-export function reactionCount(albumId: string, kind: ReactionKind, mine: boolean): number {
+export function fallbackCount(albumId: string, kind: ReactionKind, mine: boolean): number {
   return baselineCount(albumId, kind) + (mine ? 1 : 0);
 }
 
-export function totalReactions(albumId: string, mine: Set<ReactionKind>): number {
+export function fallbackTotal(albumId: string, mine: Set<ReactionKind>): number {
   return REACTION_KINDS.reduce(
-    (sum, k) => sum + reactionCount(albumId, k, mine.has(k)),
+    (sum, k) => sum + fallbackCount(albumId, k, mine.has(k)),
     0,
   );
 }
 
-/** Pick the reaction kind with the highest count for an album — used by
- *  the wall row's condensed badge. */
+/** Pick the reaction kind with the highest count for an album. Only
+ *  meaningful in fallback mode — the platform aggregate event doesn't
+ *  break down by kind, so the wall row's icon uses this in fallback
+ *  and a fixed `heart` icon in real mode. */
 export function dominantReaction(albumId: string, mine: Set<ReactionKind>): ReactionKind {
   let best: ReactionKind = 'heart';
   let bestCount = -1;
   for (const k of REACTION_KINDS) {
-    const c = reactionCount(albumId, k, mine.has(k));
+    const c = fallbackCount(albumId, k, mine.has(k));
     if (c > bestCount) { best = k; bestCount = c; }
   }
   return best;
@@ -56,3 +72,7 @@ export const REACTION_EMOJI: Record<ReactionKind, string> = {
   mind: '🤯',
   eye: '👀',
 };
+
+// Legacy export — kept for any straggling import site.
+export const reactionCount = fallbackCount;
+export const totalReactions = fallbackTotal;
