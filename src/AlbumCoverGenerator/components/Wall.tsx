@@ -15,7 +15,8 @@ interface Props {
   loaded: boolean;
   /** Map: album.id → set of reaction kinds I've given. */
   myReactions: Map<string, Set<ReactionKind>>;
-  onBack: () => void;
+  /** Omit when wall is the landing screen — no prior phase to return to. */
+  onBack?: () => void;
   onView: (album: Album) => void;
   onNew: () => void;
 }
@@ -50,9 +51,9 @@ export default function Wall({ community, mine, loaded, myReactions, onBack, onV
     <Ticket
       topLabel={t('ticket_label_wall')}
       catalog={`${String(total).padStart(2, '0')} ${t('on_file')}`}
-      footerHero={t('result_new')}
+      footerHero={t('footer_hero_in')}
       onFooterHeroClick={onNew}
-      footerLeftAction={{ label: t('wall_back'), onClick: onBack }}
+      footerLeftAction={onBack ? { label: t('wall_back'), onClick: onBack } : undefined}
     >
       <div className="acg-archive-head">
         <ArchiveIcon className="acg-archive-icon" />

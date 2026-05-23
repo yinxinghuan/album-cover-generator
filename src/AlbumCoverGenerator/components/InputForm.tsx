@@ -1,9 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Ticket from './Ticket';
-import CoverPlaceholder from './CoverPlaceholder';
 import { t } from '../i18n';
 import { catalogNumber } from '../utils/catalog';
-import { vinylFor } from '../utils/vinyl';
 
 interface Props {
   onSubmit: (words: [string, string, string]) => void;
@@ -23,17 +21,10 @@ export default function InputForm({ onSubmit, onWall, pressed, hasFirstTouched }
   const inputRef = useRef<HTMLInputElement>(null);
 
   const cat = catalogNumber(pressed);
-  const today = formatDate(new Date());
 
   const values: [string, string, string] = [w1, w2, w3];
   const setters = [setW1, setW2, setW3] as const;
   const placeholders = [t('input_w1'), t('input_w2'), t('input_w3')];
-
-  const allFilled = !!(w1.trim() && w2.trim() && w3.trim());
-  const previewVinyl = useMemo(() => {
-    if (!allFilled) return undefined;
-    return vinylFor(`${w1.trim()}|${w2.trim()}|${w3.trim()}`.toLowerCase());
-  }, [allFilled, w1, w2, w3]);
 
   const currentValue = values[step];
   const canAdvance = currentValue.trim().length > 0;
@@ -105,24 +96,10 @@ export default function InputForm({ onSubmit, onWall, pressed, hasFirstTouched }
       onFooterHeroClick={handleFooterHero}
       footerLeftAction={{ label: t('wall_link'), onClick: onWall }}
     >
-      <CoverPlaceholder
-        catalog={cat}
-        variant={allFilled ? 'preview' : 'empty'}
-        design={previewVinyl}
-      />
-
-      <div className="acg-orderline">
-        <span className="acg-orderline__label">{t('order_placed')}</span>
-        <span className="acg-orderline__value">{today}</span>
-        <span className="acg-orderline__sep">/</span>
-        <span className="acg-orderline__value">{t('form_no')}</span>
-      </div>
-
-      <h1 className="acg-display acg-display--hero">{t('input_heading')}</h1>
-      <p className="acg-deck">{t('input_deck')}</p>
-
-      <div className="acg-perf acg-perf--label" data-label={t('perf_a_side')} />
-
+      {/* Stripped: vinyl preview, orderline, hero heading, deck, and the
+        A-side perforation. With wall now the landing screen and the input
+        flow refocused on a single field, those decorations only pushed
+        the input below the fold and created scrolling churn while typing. */}
       <div className="acg-wizard">
         <div className="acg-wizard__head">
           <span key={`label-${step}`} className="acg-wizard__step-label">
@@ -189,10 +166,4 @@ export default function InputForm({ onSubmit, onWall, pressed, hasFirstTouched }
       {!hasFirstTouched && <p className="acg-fineprint" aria-hidden />}
     </Ticket>
   );
-}
-
-function formatDate(d: Date): string {
-  // 22 MAY 2026
-  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-  return `${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]} ${d.getFullYear()}`;
 }

@@ -58,7 +58,10 @@ export default function AlbumCoverGenerator() {
   const albumGen = useAlbumGen();
   const wall = useWall();
 
-  const [phase, setPhase] = useState<Phase>('input');
+  // Wall (archive) is the landing screen — the social emphasis is now
+  // browsing other people's pressings; pressing your own is a tap away
+  // via the footer hero. Input phase is reached on demand.
+  const [phase, setPhase] = useState<Phase>('wall');
   const [current, setCurrent] = useState<Album | null>(null);
   const [pending, setPending] = useState<{ catalog: string; vinyl: ReturnType<typeof vinylFor> } | null>(null);
   const [shareLabel, setShareLabel] = useState<string>('');
@@ -286,7 +289,10 @@ export default function AlbumCoverGenerator() {
             mine={albums}
             loaded={wallLoaded}
             myReactions={myReactions}
-            onBack={handleBackFromWall}
+            // No back when wall is the landing screen. Once the user has
+            // pressed (or peeked at) a record, `current` is set and back
+            // takes them to the result view.
+            onBack={current ? handleBackFromWall : undefined}
             onView={handleViewFromWall}
             onNew={handleNew}
           />
