@@ -122,11 +122,20 @@ export default function AlbumCoverGenerator() {
   // True when the user navigated to result via tapping a wall entry.
   // Used to route the "back" gesture back to wall instead of input.
   const [cameFromWall, setCameFromWall] = useState(false);
+  // Author of the album currently being viewed in play mode. Carried
+  // here (not on the Album itself) since Album is a save artifact and
+  // the author depends on which wall entry was tapped.
+  const [currentAuthor, setCurrentAuthor] = useState<{
+    userId: string; userName?: string; userAvatarUrl?: string;
+  } | null>(null);
 
-  const handleViewFromWall = (album: Album) => {
+  const handleViewFromWall = (album: Album, author?: {
+    userId: string; userName?: string; userAvatarUrl?: string;
+  }) => {
     playClick();
     setCurrent(album);
     setCameFromWall(true);
+    setCurrentAuthor(author ?? null);
     setPhase('result');
   };
 
@@ -281,6 +290,9 @@ export default function AlbumCoverGenerator() {
             onShare={isInAigram ? undefined : handleShare}
             shareLabel={shareLabel || undefined}
             shareDisabled={!!shareLabel}
+            author={cameFromWall && currentAuthor && currentAuthor.userName
+              ? currentAuthor
+              : undefined}
           />
         )}
         {phase === 'wall' && (

@@ -7,6 +7,7 @@ import { t } from '../i18n';
 import { genreFor } from '../utils/catalog';
 import { vinylFor } from '../utils/vinyl';
 import { totalReactions, dominantReaction } from '../utils/reactions';
+import { openAigramProfile } from '@shared/runtime/bridge';
 import type { Album, ReactionKind, WallEntry } from '../types';
 
 interface Props {
@@ -17,7 +18,8 @@ interface Props {
   myReactions: Map<string, Set<ReactionKind>>;
   /** Omit when wall is the landing screen — no prior phase to return to. */
   onBack?: () => void;
-  onView: (album: Album) => void;
+  /** Author is forwarded so the result page can show + link to a profile. */
+  onView: (album: Album, author?: { userId: string; userName?: string; userAvatarUrl?: string }) => void;
   onNew: () => void;
 }
 
@@ -129,7 +131,7 @@ interface ViewProps {
   entries: WallEntry[];
   reactionsOf: (id: string) => Set<ReactionKind>;
   scope: ScopeMode;
-  onSelect: (album: Album) => void;
+  onSelect: (album: Album, author?: { userId: string; userName?: string; userAvatarUrl?: string }) => void;
 }
 
 function ListView({ entries, reactionsOf, scope, onSelect }: ViewProps) {
@@ -142,10 +144,25 @@ function ListView({ entries, reactionsOf, scope, onSelect }: ViewProps) {
         const myR = reactionsOf(e.album.id);
         const dominant = dominantReaction(e.album.id, myR);
         const total = totalReactions(e.album.id, myR);
+        const showAuthor = scope === 'all' && !!e.userName;
         return (
           <li key={`${e.userId}-${e.album.id}`}>
-            <button type="button" className="acg-wall-row"
-                    onClick={() => onSelect(e.album)}>
+            {/* Row is a `div role="button"` (not `<button>`) so the
+              author chip below can be a real nested button without
+              invalid `button > button` nesting. Keyboard activation
+              still works via the Enter/Space handler. */}
+            <div role="button" tabIndex={0} className="acg-wall-row"
+                 onClick={() => onSelect(e.album, scope === 'all' ? {
+                   userId: e.userId, userName: e.userName, userAvatarUrl: e.userAvatarUrl,
+                 } : undefined)}
+                 onKeyDown={(ev) => {
+                   if (ev.key === 'Enter' || ev.key === ' ') {
+                     ev.preventDefault();
+                     onSelect(e.album, scope === 'all' ? {
+                       userId: e.userId, userName: e.userName, userAvatarUrl: e.userAvatarUrl,
+                     } : undefined);
+                   }
+                 }}>
               <span className="acg-wall-row__stub">No.{String(idx).padStart(2, '0')}</span>
               <div className="acg-wall-row__display">
                 <div className="acg-wall-row__vinyl">
@@ -167,7 +184,16 @@ function ListView({ entries, reactionsOf, scope, onSelect }: ViewProps) {
                 ? <ReactionBadge dominant={dominant} count={total} mine={myR.size > 0} />
                 : <span />}
               <Arrow className="acg-wall-row__arrow" size={16} />
-            </button>
+            </div>
+            {/* Author chip lives OUTSIDE the row grid — the row's info
+              cell collapses to ~36px once the cover + reaction badge
+              eat the width, so a chip nested in there gets clipped.
+              As a sibling under <li> it spans the full content width. */}
+            {showAuthor && (
+              <AuthorChip userId={e.userId}
+                          name={e.userName!}
+                          avatarUrl={e.userAvatarUrl} />
+            )}
           </li>
         );
       })}
@@ -184,13 +210,36 @@ function GridView({ entries, reactionsOf, scope, onSelect }: ViewProps) {
         const myR = reactionsOf(e.album.id);
         const dominant = dominantReaction(e.album.id, myR);
         const total = totalReactions(e.album.id, myR);
+        const showAuthor = scope === 'all' && !!e.userName;
         return (
           <li key={`${e.userId}-${e.album.id}`}>
-            <button type="button" className="acg-wall-tile"
-                    onClick={() => onSelect(e.album)}>
+            {/* Tile is a div (not button) so the author avatar can be a
+              real nested button. */}
+            <div role="button" tabIndex={0} className="acg-wall-tile"
+                 onClick={() => onSelect(e.album, scope === 'all' ? {
+                   userId: e.userId, userName: e.userName, userAvatarUrl: e.userAvatarUrl,
+                 } : undefined)}
+                 onKeyDown={(ev) => {
+                   if (ev.key === 'Enter' || ev.key === ' ') {
+                     ev.preventDefault();
+                     onSelect(e.album, scope === 'all' ? {
+                       userId: e.userId, userName: e.userName, userAvatarUrl: e.userAvatarUrl,
+                     } : undefined);
+                   }
+                 }}>
               <div className="acg-wall-tile__cover-wrap">
                 <img className={`acg-wall-tile__cover acg-cover-panel__art--${e.album.style}`}
                      src={e.album.imageUrl} alt={e.album.title} draggable={false} />
+                {showAuthor && (
+                  <button type="button" className="acg-wall-tile__author"
+                          aria-label={`Open ${e.userName}'s profile`}
+                          onClick={(ev) => { ev.stopPropagation(); openAigramProfile(e.userId); }}
+                          onPointerDown={(ev) => ev.stopPropagation()}>
+                    {e.userAvatarUrl
+                      ? <img src={e.userAvatarUrl} alt="" draggable={false} />
+                      : <span className="acg-wall-tile__author-initial">{(e.userName ?? '?')[0]}</span>}
+                  </button>
+                )}
                 {scope === 'all' && (
                   <span className="acg-wall-tile__like">
                     <ReactionIcon kind={dominant} size={10} />
@@ -202,11 +251,27 @@ function GridView({ entries, reactionsOf, scope, onSelect }: ViewProps) {
                 <span className="acg-wall-tile__cat">{catNum}</span>
                 <span className="acg-wall-tile__band">{e.album.bandName}</span>
               </div>
-            </button>
+            </div>
           </li>
         );
       })}
     </ul>
+  );
+}
+
+// Small avatar+name button. Stops propagation so the parent row's
+// click (which navigates to the album view) doesn't fire.
+function AuthorChip({ userId, name, avatarUrl }: { userId: string; name: string; avatarUrl?: string }) {
+  return (
+    <button type="button" className="acg-author-chip"
+            aria-label={`Open ${name}'s profile`}
+            onClick={(ev) => { ev.stopPropagation(); openAigramProfile(userId); }}
+            onPointerDown={(ev) => ev.stopPropagation()}>
+      {avatarUrl
+        ? <img className="acg-author-chip__avatar" src={avatarUrl} alt="" draggable={false} />
+        : <span className="acg-author-chip__initial">{(name[0] ?? '?').toUpperCase()}</span>}
+      <span className="acg-author-chip__name">{name}</span>
+    </button>
   );
 }
 

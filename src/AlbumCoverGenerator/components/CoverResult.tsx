@@ -7,6 +7,7 @@ import { trackTime, genreFor } from '../utils/catalog';
 import { vinylFor, vinylDesignLabel } from '../utils/vinyl';
 import { playMusic, parseMusicSpec, type MusicHandle } from '../utils/music';
 import { reactionCount } from '../utils/reactions';
+import { openAigramProfile } from '@shared/runtime/bridge';
 import { REACTION_KINDS, type Album, type ReactionKind } from '../types';
 
 interface Props {
@@ -21,6 +22,8 @@ interface Props {
   onShare?: () => void;
   shareLabel?: string;
   shareDisabled?: boolean;
+  /** Album author — present only in play mode (forwarded from wall). */
+  author?: { userId: string; userName?: string; userAvatarUrl?: string };
 }
 
 export default function CoverResult({
@@ -33,6 +36,7 @@ export default function CoverResult({
   onShare,
   shareLabel,
   shareDisabled,
+  author,
 }: Props) {
   const isPlayMode = viewMode === 'play';
   const reactions = myReactions ?? new Set<ReactionKind>();
@@ -168,6 +172,17 @@ export default function CoverResult({
           <h1 className="acg-display acg-display--xl">{album.bandName}</h1>
           <h2 className="acg-display acg-display--lg acg-display--orange">{album.title}</h2>
         </div>
+
+        {isPlayMode && author && author.userName && (
+          <button type="button" className="acg-author-chip acg-author-chip--result"
+                  aria-label={`Open ${author.userName}'s profile`}
+                  onClick={() => openAigramProfile(author.userId)}>
+            {author.userAvatarUrl
+              ? <img className="acg-author-chip__avatar" src={author.userAvatarUrl} alt="" draggable={false} />
+              : <span className="acg-author-chip__initial">{(author.userName[0] ?? '?').toUpperCase()}</span>}
+            <span className="acg-author-chip__name">{author.userName}</span>
+          </button>
+        )}
 
         <div className="acg-perf acg-perf--label" data-label={t('perf_credits')} />
 

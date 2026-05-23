@@ -2575,6 +2575,116 @@
   font-size: 18px;
 }
 
+// ===== Author chip =====
+//
+// Small tappable avatar + name. Used in the wall list view row and in
+// the result-view header (play mode). Independent tap target inside a
+// larger clickable area — stopPropagation handlers in JSX prevent the
+// parent's click from firing when the chip is tapped.
+
+.acg-author-chip {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: none;
+  padding: 4px 10px 4px 4px;
+  margin: 2px 0 8px 50px; // left-indent aligns chip under the cover panel
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  color: rgba(255, 226, 201, 0.85);
+  font-family: @font-mono;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 160ms ease;
+  width: fit-content; // prevent flex parent from stretching it full-width
+  &:hover, &:focus-visible {
+    background: rgba(255, 226, 201, 0.08);
+    outline: none;
+  }
+}
+
+.acg-author-chip__avatar,
+.acg-author-chip__initial {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 226, 201, 0.18);
+  color: @light;
+  font-family: @font-grotesque;
+  font-weight: 700;
+  font-size: 11px;
+  object-fit: cover;
+}
+
+.acg-author-chip__name {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Larger variant for the result page header — "made by @user".
+.acg-author-chip--result {
+  margin: 10px 0 12px;
+  padding: 6px 12px 6px 6px;
+  font-size: 13px;
+  background: rgba(255, 226, 201, 0.06);
+  .acg-author-chip__avatar,
+  .acg-author-chip__initial {
+    width: 26px;
+    height: 26px;
+    font-size: 13px;
+  }
+  .acg-author-chip__name {
+    max-width: 220px;
+  }
+}
+
+// Grid tile avatar overlay (top-left corner of cover wrap).
+.acg-wall-tile__author {
+  appearance: none;
+  -webkit-appearance: none;
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  padding: 0;
+  border: 1.5px solid rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  overflow: hidden;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.acg-wall-tile__author-initial {
+  color: @light;
+  font-family: @font-grotesque;
+  font-weight: 700;
+  font-size: 12px;
+}
+
 // Wall modal — focused single LP.
 .acg-modal {
   position: fixed;
