@@ -36,9 +36,9 @@ const en: Dict = {
   // Input phase
   input_heading: 'press a record',
   input_deck: 'three tracks, side a only. cut once.',
-  input_w1: 'first track',
-  input_w2: 'second track',
-  input_w3: 'third track',
+  input_w1: 'your first track',
+  input_w2: 'your second track',
+  input_w3: 'your third track',
   input_press: 'press record',
   input_fineprint: 'master cut at alteru records, brooklyn. order is permanent — keep the ticket.',
 
@@ -125,9 +125,9 @@ const zh: Dict = {
 
   input_heading: '压一张唱片',
   input_deck: '三首 A 面 · 只切一次 · B 面留白',
-  input_w1: '第一曲',
-  input_w2: '第二曲',
-  input_w3: '第三曲',
+  input_w1: '你的第一曲',
+  input_w2: '你的第二曲',
+  input_w3: '你的第三曲',
   input_press: '压成黑胶',
   input_fineprint: '布鲁克林 ALTERU 母带切刻 · 订单不可撤 · 请保留工单',
 
@@ -206,9 +206,9 @@ const es: Dict = {
 
   input_heading: 'prensa un disco',
   input_deck: 'tres pistas, sólo lado a. corte único.',
-  input_w1: 'primera pista',
-  input_w2: 'segunda pista',
-  input_w3: 'tercera pista',
+  input_w1: 'tu primera pista',
+  input_w2: 'tu segunda pista',
+  input_w3: 'tu tercera pista',
   input_press: 'prensar disco',
   input_fineprint: 'master cortado en alteru records, brooklyn. orden irrevocable — guarda el ticket.',
 
@@ -287,9 +287,9 @@ const pt: Dict = {
 
   input_heading: 'prensar um disco',
   input_deck: 'três faixas, só lado a. corte único.',
-  input_w1: 'primeira faixa',
-  input_w2: 'segunda faixa',
-  input_w3: 'terceira faixa',
+  input_w1: 'sua primeira faixa',
+  input_w2: 'sua segunda faixa',
+  input_w3: 'sua terceira faixa',
   input_press: 'prensar disco',
   input_fineprint: 'master cortado na alteru records, brooklyn. pedido permanente — guarde o ticket.',
 
@@ -368,9 +368,9 @@ const ru: Dict = {
 
   input_heading: 'записать пластинку',
   input_deck: 'три трека, только сторона a. один пресс.',
-  input_w1: 'первый трек',
-  input_w2: 'второй трек',
-  input_w3: 'третий трек',
+  input_w1: 'твой первый трек',
+  input_w2: 'твой второй трек',
+  input_w3: 'твой третий трек',
   input_press: 'запрессовать',
   input_fineprint: 'мастер режется на alteru records, бруклин. заказ необратим — сохрани билет.',
 
@@ -449,9 +449,9 @@ const ja: Dict = {
 
   input_heading: 'レコードを切る',
   input_deck: '3 曲、A 面のみ。一度きりカット。',
-  input_w1: '1 曲目',
-  input_w2: '2 曲目',
-  input_w3: '3 曲目',
+  input_w1: '1 曲目のタイトル',
+  input_w2: '2 曲目のタイトル',
+  input_w3: '3 曲目のタイトル',
   input_press: 'プレスする',
   input_fineprint: 'ブルックリンの alteru records にてマスターを切削。注文は取消不可、券は保管を。',
 
@@ -530,9 +530,9 @@ const ko: Dict = {
 
   input_heading: '레코드 만들기',
   input_deck: '세 곡, A 면만. 단 한 번 커팅.',
-  input_w1: '첫 번째 곡',
-  input_w2: '두 번째 곡',
-  input_w3: '세 번째 곡',
+  input_w1: '첫 번째 곡 제목',
+  input_w2: '두 번째 곡 제목',
+  input_w3: '세 번째 곡 제목',
   input_press: '프레스 하기',
   input_fineprint: '브루클린 alteru records 에서 마스터 커팅. 주문 취소 불가, 티켓 보관 요망.',
 
@@ -611,9 +611,9 @@ const fr: Dict = {
 
   input_heading: 'presser un disque',
   input_deck: 'trois titres, face a uniquement. coupe unique.',
-  input_w1: 'premier titre',
-  input_w2: 'deuxième titre',
-  input_w3: 'troisième titre',
+  input_w1: 'ta première piste',
+  input_w2: 'ta deuxième piste',
+  input_w3: 'ta troisième piste',
   input_press: 'presser',
   input_fineprint: 'master gravé chez alteru records, brooklyn. commande irrévocable — gardez le ticket.',
 

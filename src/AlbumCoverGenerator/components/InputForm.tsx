@@ -72,8 +72,15 @@ export default function InputForm({ onSubmit, onWall, pressed, hasFirstTouched }
     else submitAll();
   };
 
-  // Footer hero: "next track" on steps 0/1, "order a pressing" on step 2.
-  const footerHeroLabel = step < 2 ? t('wizard_next') : t('footer_hero_in');
+  // Footer hero label:
+  // - on landing (nothing typed yet) → "order a pressing" so the big CTA
+  //   reads as a clear start action rather than the confusing "next track"
+  // - once any progress exists and step < 2 → "next track"
+  // - on the last step → "order a pressing" again as the final action
+  const anyTyped = !!(w1.trim() || w2.trim() || w3.trim());
+  const footerHeroLabel = step === 2 || !anyTyped
+    ? t('footer_hero_in')
+    : t('wizard_next');
 
   // Reveal-or-advance: on the landing screen the wizard input sits below
   // the fold, so a first tap of the footer hero has nothing to advance.
