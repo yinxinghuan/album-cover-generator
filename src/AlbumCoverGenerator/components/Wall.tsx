@@ -22,14 +22,16 @@ interface Props {
   /** Author is forwarded so the result page can show + link to a profile. */
   onView: (album: Album, author?: { userId: string; userName?: string; userAvatarUrl?: string }) => void;
   onNew: () => void;
+  /** Lifted to parent so scope survives Wall unmount on row tap → back. */
+  scope: ScopeMode;
+  onScopeChange: (next: ScopeMode) => void;
 }
 
 type ViewMode = 'list' | 'grid';
-type ScopeMode = 'my' | 'all';
+export type ScopeMode = 'my' | 'all';
 
-export default function Wall({ community, mine, loaded, myReactions, onBack, onView, onNew }: Props) {
+export default function Wall({ community, mine, loaded, myReactions, onBack, onView, onNew, scope, onScopeChange }: Props) {
   const [view, setView] = useState<ViewMode>('list');
-  const [scope, setScope] = useState<ScopeMode>(mine.length > 0 ? 'my' : 'all');
 
   const reactionsOf = (id: string): Set<ReactionKind> =>
     myReactions.get(id) ?? new Set<ReactionKind>();
@@ -81,7 +83,7 @@ export default function Wall({ community, mine, loaded, myReactions, onBack, onV
             type="button"
             role="tab"
             className={`acg-scope-tab ${scope === 'my' ? 'is-active' : ''}`}
-            onPointerDown={() => setScope('my')}
+            onPointerDown={() => onScopeChange('my')}
             aria-selected={scope === 'my'}
           >
             {t('scope_my')}
@@ -90,7 +92,7 @@ export default function Wall({ community, mine, loaded, myReactions, onBack, onV
             type="button"
             role="tab"
             className={`acg-scope-tab ${scope === 'all' ? 'is-active' : ''}`}
-            onPointerDown={() => setScope('all')}
+            onPointerDown={() => onScopeChange('all')}
             aria-selected={scope === 'all'}
           >
             {t('scope_all')}

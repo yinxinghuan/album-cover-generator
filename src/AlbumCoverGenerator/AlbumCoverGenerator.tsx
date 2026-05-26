@@ -4,7 +4,7 @@ import { isInAigram, useGameEvent } from '@shared/runtime';
 import InputForm from './components/InputForm';
 import CoverLoading from './components/CoverLoading';
 import CoverResult from './components/CoverResult';
-import Wall from './components/Wall';
+import Wall, { type ScopeMode } from './components/Wall';
 import VinylGallery from './components/VinylGallery';
 import AnimDemo from './components/AnimDemo';
 import { useAlbumGen } from './hooks/useAlbumGen';
@@ -119,9 +119,24 @@ export default function AlbumCoverGenerator() {
   // Combined own discography — locally pressed + cloud-rehydrated.
   const albums: Album[] = [...localExtra, ...(savedData?.albums ?? [])];
 
+  // First time we know how many albums the user has, pick the better
+  // default tab (no albums → ALL is more interesting). After that the
+  // user's manual selection wins, even across Wall remounts.
+  useEffect(() => {
+    if (scopeInitialized.current) return;
+    if (savedData === undefined) return; // still rehydrating
+    scopeInitialized.current = true;
+    if (albums.length === 0) setWallScope('all');
+  }, [savedData, albums.length]);
+
   // True when the user navigated to result via tapping a wall entry.
   // Used to route the "back" gesture back to wall instead of input.
   const [cameFromWall, setCameFromWall] = useState(false);
+  // Lifted out of <Wall> so the tab the user was browsing survives a
+  // round-trip through the result view. Without this, opening any row
+  // from "ALL" and tapping back lands on "MY" because <Wall> remounts.
+  const [wallScope, setWallScope] = useState<ScopeMode>('my');
+  const scopeInitialized = useRef(false);
   // Author of the album currently being viewed in play mode. Carried
   // here (not on the Album itself) since Album is a save artifact and
   // the author depends on which wall entry was tapped.
@@ -322,6 +337,8 @@ export default function AlbumCoverGenerator() {
             onBack={current ? handleBackFromWall : undefined}
             onView={handleViewFromWall}
             onNew={handleNew}
+            scope={wallScope}
+            onScopeChange={setWallScope}
           />
         )}
       </div>
