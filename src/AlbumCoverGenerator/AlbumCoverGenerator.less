@@ -2836,3 +2836,15 @@
   text-overflow: ellipsis;
   max-width: 130px;
 }
+
+// ── Tap press feedback ───────────────────────────────────────────────
+// Subtle scale-down on every primary CTA so the audio + haptic pop has
+// a matching visual cue. Reactions skip this — they already do their
+// own spring + burst sequence inside `.acg-reaction`.
+.acg-play, .acg-btn, .acg-author-chip, .acg-scope-tab,
+.acg-view-switch__btn, .acg-release-display, .acg-user-chip {
+  transition: transform 90ms ease;
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+}

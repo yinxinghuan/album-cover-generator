@@ -278,6 +278,7 @@ function ReactionsBar({ album, mine, onReact }: {
             <button
               type="button"
               className={`acg-reaction ${active ? 'is-on' : ''}`}
+              data-no-feedback
               onPointerDown={() => handleTap(k)}
               aria-pressed={active}
               aria-label={k}

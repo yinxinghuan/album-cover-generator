@@ -12,7 +12,7 @@ import { useWall } from './hooks/useWall';
 import { prependAlbum, newAlbumId } from './utils/album';
 import { catalogNumber } from './utils/catalog';
 import { vinylFor } from './utils/vinyl';
-import { startAmbient, stopAmbient, playNeedleDrop, playClick, playRevealChord } from './utils/audio';
+import { startAmbient, stopAmbient, playNeedleDrop, playClick, playRevealChord, installGlobalTapFeedback } from './utils/audio';
 import { t } from './i18n';
 import type { Album, AlbumSave, Phase } from './types';
 import './AlbumCoverGenerator.less';
@@ -90,6 +90,11 @@ export default function AlbumCoverGenerator() {
   // First-touch unlock: start ambient + flag for hint fade.
   const firstTouchRef = useRef(false);
   useEffect(() => {
+    // Global delegated tap feedback (pop + haptic) on every button.
+    // Opt out per element with `data-no-feedback`. Listener installs at
+    // mount but the AudioContext is created lazily on first real touch.
+    installGlobalTapFeedback();
+
     function onPointer() {
       if (firstTouchRef.current) return;
       firstTouchRef.current = true;

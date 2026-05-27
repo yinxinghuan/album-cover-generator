@@ -187,6 +187,34 @@ export function hapticTap(): void {
   }
 }
 
+// Install a single delegated pointerdown listener that fires playPop +
+// hapticTap on every interactive control (button, role="button", anchor).
+// Opt-out: add `data-no-feedback` on the element (or any ancestor) when
+// it has its own bespoke audio (e.g. reactions, which run a custom
+// burst sequence and would otherwise double-pop).
+//
+// Following the CLAUDE rule: this only installs the listener — it does
+// NOT create the AudioContext at mount. The context is lazily created
+// by playPop's getCtx() on the FIRST real user pointerdown.
+let globalTapInstalled = false;
+export function installGlobalTapFeedback(): void {
+  if (globalTapInstalled) return;
+  if (typeof window === 'undefined') return;
+  globalTapInstalled = true;
+  window.addEventListener('pointerdown', (e) => {
+    const target = e.target as HTMLElement | null;
+    if (!target) return;
+    const interactive = target.closest(
+      'button, [role="button"], a[href]',
+    ) as HTMLElement | null;
+    if (!interactive) return;
+    if ((interactive as HTMLButtonElement).disabled) return;
+    if (interactive.closest('[data-no-feedback]')) return;
+    playPop();
+    hapticTap();
+  }, true);
+}
+
 export function playClick(): void {
   const ac = getCtx();
   if (!ac) return;
