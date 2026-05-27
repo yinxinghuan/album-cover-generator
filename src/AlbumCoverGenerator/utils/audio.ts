@@ -148,6 +148,45 @@ export function playRevealChord(): void {
   });
 }
 
+// Satisfying "pop" for tap feedback on reactions — short ascending
+// blip + high triangle pluck for sparkle. Body comes from doubling
+// two oscillators. Borrowed from pet-filter.
+export function playPop(): void {
+  const ac = getCtx();
+  if (!ac) return;
+  const t0 = ac.currentTime;
+
+  const o1 = ac.createOscillator();
+  const g1 = ac.createGain();
+  o1.type = 'sine';
+  o1.frequency.setValueAtTime(440, t0);
+  o1.frequency.exponentialRampToValueAtTime(880, t0 + 0.06);
+  g1.gain.setValueAtTime(0, t0);
+  g1.gain.linearRampToValueAtTime(0.10, t0 + 0.008);
+  g1.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.14);
+  o1.connect(g1).connect(ac.destination);
+  o1.start(t0);
+  o1.stop(t0 + 0.16);
+
+  const o2 = ac.createOscillator();
+  const g2 = ac.createGain();
+  o2.type = 'triangle';
+  o2.frequency.value = 2200;
+  g2.gain.setValueAtTime(0, t0);
+  g2.gain.linearRampToValueAtTime(0.04, t0 + 0.005);
+  g2.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.08);
+  o2.connect(g2).connect(ac.destination);
+  o2.start(t0);
+  o2.stop(t0 + 0.10);
+}
+
+// Small haptic buzz on mobile — best-effort, ignored on desktop.
+export function hapticTap(): void {
+  if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+    try { navigator.vibrate(8); } catch { /* no-op */ }
+  }
+}
+
 export function playClick(): void {
   const ac = getCtx();
   if (!ac) return;

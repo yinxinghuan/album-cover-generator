@@ -6,6 +6,7 @@ import { t } from '../i18n';
 import { trackTime, genreFor } from '../utils/catalog';
 import { vinylFor, vinylDesignLabel } from '../utils/vinyl';
 import { playMusic, parseMusicSpec, type MusicHandle } from '../utils/music';
+import { playPop, hapticTap } from '../utils/audio';
 import { fallbackCount, reactionEvent } from '../utils/reactions';
 import { openAigramProfile, isInAigram } from '@shared/runtime/bridge';
 import { useGameStats } from '@shared/runtime/useGameStats';
@@ -246,8 +247,18 @@ function ReactionsBar({ album, mine, onReact }: {
   const stats: Record<ReactionKind, { stats: { total_user_count: number }; refresh: () => Promise<void> }> = {
     heart, fire, mind, eye,
   };
+  // One-shot burst overlay per tap — scales up + drifts up + fades out.
+  // Track an array so multiple bursts can ride together on rapid taps.
+  const [bursts, setBursts] = useState<{ id: number; kind: ReactionKind }[]>([]);
   const handleTap = (k: ReactionKind) => {
     if (mine.has(k)) return;       // already reacted — no-op
+    playPop();
+    hapticTap();
+    const id = Date.now() + Math.random();
+    setBursts((prev) => [...prev, { id, kind: k }]);
+    window.setTimeout(() => {
+      setBursts((prev) => prev.filter((b) => b.id !== id));
+    }, 900);
     onReact(k);                    // trigger platform event + persist locally
     // Give the platform ~1.2s to count the trigger, then refetch so
     // the displayed number reflects the new +1.
@@ -261,19 +272,26 @@ function ReactionsBar({ album, mine, onReact }: {
         // Off-platform fallback: deterministic baseline so dev preview
         // still looks alive.
         const count = isInAigram ? real : fallbackCount(album.id, k, active);
+        const myBursts = bursts.filter((b) => b.kind === k);
         return (
-          <button
-            key={k}
-            type="button"
-            className={`acg-reaction ${active ? 'is-on' : ''}`}
-            onPointerDown={() => handleTap(k)}
-            aria-pressed={active}
-            aria-label={k}
-            disabled={active}  // permanently active once reacted
-          >
-            <ReactionIcon kind={k} size={14} className="acg-reaction__icon" />
-            <span className="acg-reaction__count">{count}</span>
-          </button>
+          <span key={k} className="acg-reaction-wrap">
+            <button
+              type="button"
+              className={`acg-reaction ${active ? 'is-on' : ''}`}
+              onPointerDown={() => handleTap(k)}
+              aria-pressed={active}
+              aria-label={k}
+              disabled={active}  // permanently active once reacted
+            >
+              <ReactionIcon kind={k} size={14} className="acg-reaction__icon" />
+              <span className="acg-reaction__count">{count}</span>
+            </button>
+            {myBursts.map((b) => (
+              <span key={b.id} className="acg-reaction-burst" aria-hidden>
+                <ReactionIcon kind={k} size={20} />
+              </span>
+            ))}
+          </span>
         );
       })}
     </div>
