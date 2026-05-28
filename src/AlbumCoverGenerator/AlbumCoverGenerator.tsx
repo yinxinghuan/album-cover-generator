@@ -124,24 +124,17 @@ export default function AlbumCoverGenerator() {
   // Combined own discography — locally pressed + cloud-rehydrated.
   const albums: Album[] = [...localExtra, ...(savedData?.albums ?? [])];
 
-  // First time we know how many albums the user has, pick the better
-  // default tab (no albums → ALL is more interesting). After that the
-  // user's manual selection wins, even across Wall remounts.
-  useEffect(() => {
-    if (scopeInitialized.current) return;
-    if (savedData === undefined) return; // still rehydrating
-    scopeInitialized.current = true;
-    if (albums.length === 0) setWallScope('all');
-  }, [savedData, albums.length]);
-
   // True when the user navigated to result via tapping a wall entry.
   // Used to route the "back" gesture back to wall instead of input.
   const [cameFromWall, setCameFromWall] = useState(false);
   // Lifted out of <Wall> so the tab the user was browsing survives a
   // round-trip through the result view. Without this, opening any row
   // from "ALL" and tapping back lands on "MY" because <Wall> remounts.
-  const [wallScope, setWallScope] = useState<ScopeMode>('my');
-  const scopeInitialized = useRef(false);
+  // Default ALL — the wall is the landing screen so the player should
+  // see community activity first, regardless of whether they've made
+  // their own albums. Their manual switch to "MY" persists for the
+  // session.
+  const [wallScope, setWallScope] = useState<ScopeMode>('all');
   // Author of the album currently being viewed in play mode. Carried
   // here (not on the Album itself) since Album is a save artifact and
   // the author depends on which wall entry was tapped.
