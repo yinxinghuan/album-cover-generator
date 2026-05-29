@@ -1,9 +1,14 @@
-// Fetch the 6 most recent users' latest album from the platform.
+// Fetch the most recent albums across the 6 most-recent users.
 //
 // Wire: get/data/list?session_id=<gameUUID> returns up to 6 most-recent
-// users' latest save row. We parse each row's resource_data as an
-// AlbumSave, take its newest album, and (in parallel) look up each
-// user's name + avatar via the user-info API.
+// users' latest save row. Each row's resource_data is an AlbumSave
+// (cap 20 albums per user). We flatten ALL albums across ALL users,
+// sort newest-first across authors, cap the display count, and
+// resolve each unique user's profile once.
+//
+// We throttle at PUBLISH (daily quota), never at display — see
+// feedback_throttle_at_input_not_output. Older publishes must stay
+// browsable.
 
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -49,37 +54,56 @@ export function useWall(): UseWall {
         );
         const rows = Array.isArray(res?.data) ? res.data : [];
 
-        const parsed: Array<{ row: SaveRow; album: Album }> = [];
+        // Flatten ALL albums from each user's save row. Past versions
+        // only took albums[0] per user, which made every author's new
+        // publish visually replace their older ones. We throttle at
+        // publish, not at display.
+        const pairs: Array<{ userId: string; album: Album }> = [];
         for (const row of rows) {
           if (!row.user_id || !row.resource_data) continue;
           try {
             const save = JSON.parse(row.resource_data) as AlbumSave;
-            const album = save.albums?.[0];
-            if (album && album.imageUrl) {
-              parsed.push({ row, album });
+            for (const album of save.albums || []) {
+              if (album && album.imageUrl) {
+                pairs.push({ userId: row.user_id, album });
+              }
             }
           } catch { /* skip corrupt row */ }
-          if (parsed.length >= 6) break;
         }
+        // Newest first across all authors, cap visible count.
+        pairs.sort((a, b) => (b.album.createdAt ?? 0) - (a.album.createdAt ?? 0));
+        const limited = pairs.slice(0, 24);
 
-        // Resolve user profiles in parallel.
-        const profiles = await Promise.all(
-          parsed.map(({ row }) =>
-            callAigramAPI<AigramResponse<{ name?: string; head_url?: string }>>(
-              `/note/telegram/user/get/info/by/telegram_id?telegram_id=${encodeURIComponent(row.user_id)}`,
-              'GET',
-            ).catch(() => null),
-          ),
+        // Resolve each unique author's profile once and cache.
+        const uniqueIds = Array.from(new Set(limited.map(p => p.userId)));
+        const profileEntries = await Promise.all(
+          uniqueIds.map(async uid => {
+            try {
+              const r = await callAigramAPI<
+                AigramResponse<{ name?: string; head_url?: string }>
+              >(
+                `/note/telegram/user/get/info/by/telegram_id?telegram_id=${encodeURIComponent(uid)}`,
+                'GET',
+              );
+              return [uid, r?.data ?? null] as const;
+            } catch {
+              return [uid, null] as const;
+            }
+          }),
         );
+        const profileMap = new Map<string, { name?: string; head_url?: string } | null>(profileEntries);
 
         if (cancelled) return;
         setEntries(
-          parsed.map(({ row, album }, i) => ({
-            userId: row.user_id,
-            userName: profiles[i]?.data?.name,
-            userAvatarUrl: profiles[i]?.data?.head_url,
-            album,
-          })),
+          limited.map(({ userId, album }) => {
+            const p = profileMap.get(userId) || null;
+            return {
+              userId,
+              userName: p?.name,
+              userAvatarUrl: p?.head_url,
+              album,
+            };
+          }),
         );
       } catch {
         if (!cancelled) setEntries([]);
