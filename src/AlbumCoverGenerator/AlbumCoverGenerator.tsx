@@ -119,10 +119,22 @@ export default function AlbumCoverGenerator() {
   // Local mirror of the user's discography so freshly pressed records
   // immediately show with the correct catalog #, instead of waiting for
   // useGameSave to rehydrate (it doesn't update savedData on persist).
-  const [localExtra, setLocalExtra] = useState<Album[]>([]);
-  const pressed = (savedData?.albums?.length ?? 0) + localExtra.length;
-  // Combined own discography — locally pressed + cloud-rehydrated.
-  const albums: Album[] = [...localExtra, ...(savedData?.albums ?? [])];
+  // Local mirror — useGameSave.savedData does NOT update after persist(),
+  // so subsequent persist calls read stale savedData and overwrite older
+  // entries (e.g. handleSubmit's prependAlbum(savedData?.albums, ...) on
+  // the SECOND publish saw null and saved only the new album). Also fixes
+  // toggleReaction/handleSubmit dropping each other's fields when they
+  // both read stale savedData.
+  // See feedback_useGameSave_local_mirror.md.
+  const [mirror, setMirror] = useState<AlbumSave | undefined>(undefined);
+  useEffect(() => {
+    if (mirror === undefined && savedData !== undefined) {
+      setMirror(savedData ?? { albums: [], reactions: {} });
+    }
+  }, [savedData, mirror]);
+
+  const albums: Album[] = mirror?.albums ?? [];
+  const pressed = albums.length;
 
   // True when the user navigated to result via tapping a wall entry.
   // Used to route the "back" gesture back to wall instead of input.
@@ -158,11 +170,11 @@ export default function AlbumCoverGenerator() {
   // read so saved hearts don't vanish.
   const myReactions = (() => {
     const out = new Map<string, Set<import('./types').ReactionKind>>();
-    const reactions = savedData?.reactions ?? {};
+    const reactions = mirror?.reactions ?? {};
     for (const [id, kinds] of Object.entries(reactions)) {
       out.set(id, new Set(kinds));
     }
-    for (const legacyId of savedData?.liked ?? []) {
+    for (const legacyId of mirror?.liked ?? []) {
       if (!out.has(legacyId)) out.set(legacyId, new Set(['heart']));
       else out.get(legacyId)!.add('heart');
     }
@@ -194,7 +206,13 @@ export default function AlbumCoverGenerator() {
       else reactions[id] = [...kinds];
     }
     if (!reactions[albumId]) reactions[albumId] = [...current];
-    persist({ albums: savedData?.albums ?? [], reactions });
+    const nextSave: AlbumSave = {
+      albums: mirror?.albums ?? [],
+      reactions,
+      liked: mirror?.liked,
+    };
+    setMirror(nextSave);
+    persist(nextSave);
   };
 
   // ---- Phase transitions ----
@@ -227,9 +245,16 @@ export default function AlbumCoverGenerator() {
       setCurrent(stamped);
       setPhase('result');
       playRevealChord();
-      const nextAlbums = prependAlbum(savedData?.albums, stamped);
-      persist({ albums: nextAlbums });
-      setLocalExtra(prev => [stamped, ...prev].slice(0, 12));
+      // Build full save from mirror — keep reactions/liked intact (the
+      // pre-mirror code did `persist({ albums: nextAlbums })` here which
+      // silently wiped all reactions on every publish!).
+      const nextSave: AlbumSave = {
+        albums: prependAlbum(mirror?.albums, stamped),
+        reactions: mirror?.reactions ?? {},
+        liked: mirror?.liked,
+      };
+      setMirror(nextSave);
+      persist(nextSave);
     } catch {
       // Surface a quick error then bounce back to input.
       setPhase('input');
