@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useGameSave } from '@shared/save';
-import { isInAigram, useGameEvent } from '@shared/runtime';
+import { isInAigram, useGameEvent, telegramId } from '@shared/runtime';
 import InputForm from './components/InputForm';
 import CoverLoading from './components/CoverLoading';
 import CoverResult from './components/CoverResult';
@@ -189,23 +189,50 @@ export default function AlbumCoverGenerator() {
   const events = useGameEvent();
   const reactionsFor = (id: string) => myReactions.get(id) ?? new Set<import('./types').ReactionKind>();
   const toggleReaction = (albumId: string, kind: import('./types').ReactionKind) => {
-    const current = new Set(myReactions.get(albumId) ?? []);
-    if (current.has(kind)) return; // tap-once, no untap
-    const isFirstReactionOnAlbum = current.size === 0;
-    current.add(kind);
+    const myKindsBefore = new Set(myReactions.get(albumId) ?? []);
+    if (myKindsBefore.has(kind)) return; // tap-once, no untap
+    const isFirstReactionOnAlbum = myKindsBefore.size === 0;
+    myKindsBefore.add(kind);
+    // Build a notify config when reacting to someone else's album. The
+    // album being viewed in this branch is always `current` (the
+    // wall-view setter wires `setCurrent(album)` + `setCurrentAuthor`).
+    const album = current;
+    const authorId = currentAuthor?.userId;
+    const selfId = telegramId || 'self';
+    const isOther = !!authorId && authorId !== 'self' && authorId !== selfId;
+    const reactTmpl =
+      kind === 'heart' ? '{sender_name} loved your cover.' :
+      kind === 'fire'  ? '{sender_name} thought your cover was fire.' :
+      kind === 'mind'  ? '{sender_name} had their mind blown by your cover.' :
+                         '{sender_name} kept eyes on your cover.';
+    const config = (isOther && album && album.imageUrl)
+      ? {
+          actions: [
+            {
+              type: 'notify',
+              target_user_id: authorId!,
+              image: {
+                ref_url: album.imageUrl,
+                prompt: `${album.bandName ?? 'band'} — ${album.title ?? 'untitled'}, indie record cover`,
+              },
+              message: { template: reactTmpl, variables: ['sender_name'] },
+            },
+          ],
+        }
+      : undefined;
     // Fire-and-forget platform events. The matching useGameStats hooks
     // in CoverResult / WallRow re-fetch after a short delay so the
     // count visually reflects the +1.
-    events.trigger(`react:${albumId}:${kind}`);
+    events.trigger(`react:${albumId}:${kind}`, config);
     if (isFirstReactionOnAlbum) events.trigger(`react:${albumId}`);
     // Persist locally so the active state survives reload + so we know
     // not to re-trigger the same event on subsequent taps.
     const reactions: Record<string, import('./types').ReactionKind[]> = {};
     for (const [id, kinds] of myReactions) {
-      if (id === albumId) reactions[id] = [...current];
+      if (id === albumId) reactions[id] = [...myKindsBefore];
       else reactions[id] = [...kinds];
     }
-    if (!reactions[albumId]) reactions[albumId] = [...current];
+    if (!reactions[albumId]) reactions[albumId] = [...myKindsBefore];
     const nextSave: AlbumSave = {
       albums: mirror?.albums ?? [],
       reactions,
