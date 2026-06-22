@@ -9,5 +9,5 @@
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
-  src: url('/album-cover-generator/fonts/onest-var.woff2') format('woff2-variations');
+  src: url('fonts/onest-var.woff2') format('woff2-variations');
 }

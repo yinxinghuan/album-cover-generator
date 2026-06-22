@@ -17,8 +17,8 @@ import { t } from './i18n';
 import type { Album, AlbumSave, Phase } from './types';
 import './AlbumCoverGenerator.less';
 
-const DEMO_SHOEGAZE = '/album-cover-generator/demo_cover.jpg';
-const DEMO_XEROX = '/album-cover-generator/demo_cover_xerox.jpg';
+const DEMO_SHOEGAZE = import.meta.env.BASE_URL + 'demo_cover.jpg';
+const DEMO_XEROX = import.meta.env.BASE_URL + 'demo_cover_xerox.jpg';
 
 const DEMO_ALBUM: Album = {
   id: 'demo',

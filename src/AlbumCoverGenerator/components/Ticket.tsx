@@ -40,7 +40,7 @@ export default function Ticket({
       <header className="acg-ticket__head">
         <img
           className="acg-ticket__mark"
-          src="/album-cover-generator/alteru.svg"
+          src={`${import.meta.env.BASE_URL}alteru.svg`}
           alt="ALTERU"
           draggable={false}
           aria-hidden
