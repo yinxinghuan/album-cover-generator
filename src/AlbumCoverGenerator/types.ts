@@ -4,6 +4,9 @@
 // (no more hardcoded templates) — see CoverSpec.
 export type CoverStyle = string;
 
+import type { GuestMessage } from '@shared/social/guestbook';
+export type { GuestMessage };
+
 export interface CoverSpec {
   /** Short genre slug — used as CSS class + sort/group key. */
   style: string;
@@ -86,6 +89,9 @@ export interface AlbumSave {
   liked?: string[];
   /** New model: per-album list of reactions the current user gave. */
   reactions?: Record<string, ReactionKind[]>;
+  /** Guestbook notes this user left on covers (theirs + others'). Stored
+   *  in the sender's own blob; aggregated cross-user best-effort. */
+  messages?: GuestMessage[];
 }
 
 export interface WallEntry {

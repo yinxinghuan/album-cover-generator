@@ -10,6 +10,8 @@ import { playPop, hapticTap } from '../utils/audio';
 import { fallbackCount, reactionEvent } from '../utils/reactions';
 import { openAigramProfile, isInAigram } from '@shared/runtime/bridge';
 import { useGameStats } from '@shared/runtime/useGameStats';
+import { timeAgo, MAX_LEN, type GuestMessage } from '@shared/social/guestbook';
+import { locale } from '../i18n';
 import { REACTION_KINDS, type Album, type ReactionKind } from '../types';
 
 interface Props {
@@ -26,6 +28,12 @@ interface Props {
   shareDisabled?: boolean;
   /** Album author — present only in play mode (forwarded from wall). */
   author?: { userId: string; userName?: string; userAvatarUrl?: string };
+  /** Guestbook thread for this cover (wall notes ∪ my own, oldest-first). */
+  thread?: GuestMessage[];
+  /** Current player's id — render own notes as "you", skip profile button. */
+  selfUserId?: string;
+  /** Leave a note on this cover (persist + ping author). */
+  onSendNote?: (text: string) => void;
 }
 
 export default function CoverResult({
@@ -39,6 +47,9 @@ export default function CoverResult({
   shareLabel,
   shareDisabled,
   author,
+  thread,
+  selfUserId,
+  onSendNote,
 }: Props) {
   const isPlayMode = viewMode === 'play';
   const reactions = myReactions ?? new Set<ReactionKind>();
@@ -215,6 +226,14 @@ export default function CoverResult({
           />
         )}
 
+        {isPlayMode && onSendNote && (
+          <Guestbook
+            thread={thread ?? []}
+            selfUserId={selfUserId}
+            onSend={onSendNote}
+          />
+        )}
+
         {onShare && (
           <div className="acg-actions">
             <button type="button" className="acg-btn acg-btn--ghost"
@@ -295,6 +314,105 @@ function ReactionsBar({ album, mine, onReact }: {
           </span>
         );
       })}
+    </div>
+  );
+}
+
+// ─── Guestbook ──────────────────────────────────────────────────────
+// Public text notes on a cover. Thread = best-effort wall notes ∪ my own
+// outgoing notes (oldest-first, see threadFor). Each note's author chip
+// is tappable → their Aigram profile; self shows accent "you". Compose box
+// only when in-app — off-platform shows a hint instead.
+function Guestbook({ thread, selfUserId, onSend }: {
+  thread: GuestMessage[];
+  selfUserId?: string;
+  onSend: (text: string) => void;
+}) {
+  return (
+    <div className="acg-notes">
+      <div className="acg-perf acg-perf--label" data-label={t('perf_notes')} />
+      <div className="acg-notes__head">
+        {t('notes_title')}{thread.length > 0 ? ` · ${thread.length}` : ''}
+      </div>
+      {thread.length > 0 ? (
+        <ul className="acg-notes__list">
+          {thread.map((m) => (
+            <NoteRow key={m.id} msg={m} selfUserId={selfUserId} />
+          ))}
+        </ul>
+      ) : (
+        <div className="acg-notes__empty">{t('notes_empty')}</div>
+      )}
+      {isInAigram ? (
+        <Compose onSend={onSend} />
+      ) : (
+        <div className="acg-notes__signedout">{t('notes_signedout')}</div>
+      )}
+    </div>
+  );
+}
+
+// One note: avatar + name (tappable → profile; self = accent "you"), text,
+// relative time. Uses onClick + stopPropagation (scroll-vs-click safe).
+function NoteRow({ msg, selfUserId }: { msg: GuestMessage; selfUserId?: string }) {
+  const mine = !!msg.fromUserId && msg.fromUserId === selfUserId;
+  const name = mine ? t('notes_you') : (msg.userName || t('notes_someone'));
+  const initial = (msg.userName || '?').slice(0, 1).toUpperCase();
+  const tappable = !mine && !!msg.fromUserId && isInAigram;
+  const head = (
+    <span className="acg-note__head">
+      {mine ? (
+        <span className="acg-note__avatar acg-note__avatar--self">{t('notes_you')}</span>
+      ) : msg.userAvatarUrl ? (
+        <img className="acg-note__avatar" src={msg.userAvatarUrl} alt="" draggable={false} />
+      ) : (
+        <span className="acg-note__avatar acg-note__avatar--letter">{initial}</span>
+      )}
+      <span className={`acg-note__name ${mine ? 'is-self' : ''}`}>{name}</span>
+      <span className="acg-note__time">{timeAgo(msg.ts, locale())}</span>
+    </span>
+  );
+  return (
+    <li className="acg-note">
+      {tappable ? (
+        <button type="button" className="acg-note__chip"
+                onClick={(e) => { e.stopPropagation(); openAigramProfile(msg.fromUserId!); }}>
+          {head}
+        </button>
+      ) : head}
+      <p className="acg-note__text">{msg.text}</p>
+    </li>
+  );
+}
+
+// Compose box — controlled input + send glyph. Action button, so
+// onPointerDown is fine (not inside a scroll list).
+function Compose({ onSend }: { onSend: (text: string) => void }) {
+  const [text, setText] = useState('');
+  const submit = () => {
+    const v = text.trim();
+    if (!v) return;
+    onSend(v);
+    setText('');
+  };
+  return (
+    <div className="acg-compose">
+      <input
+        className="acg-compose__input"
+        value={text}
+        maxLength={MAX_LEN}
+        placeholder={t('notes_placeholder')}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') submit(); }}
+      />
+      <button type="button" className="acg-compose__send"
+              disabled={!text.trim()}
+              aria-label={t('notes_send')}
+              onPointerDown={(e) => { e.preventDefault(); submit(); }}>
+        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden>
+          <path d="M1 8L15 2 9 15 7 9z" fill="currentColor" />
+        </svg>
+      </button>
     </div>
   );
 }

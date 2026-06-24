@@ -96,12 +96,22 @@ const en: Dict = {
   like: 'like',
   liked: 'liked',
 
+  // Guestbook (notes on a cover)
+  notes_title: 'liner notes',
+  notes_empty: 'no notes yet. leave the first.',
+  notes_placeholder: 'leave a note…',
+  notes_send: 'send',
+  notes_you: 'you',
+  notes_someone: 'someone',
+  notes_signedout: 'open in the app to leave a note.',
+
   // Perforation labels
   perf_a_side: '— side a —',
   perf_process: '— process —',
   perf_credits: '— credits —',
   perf_tear: '— tear here ✂ —',
   perf_archive: '— catalog —',
+  perf_notes: '— liner notes —',
 
   // Footer heroes
   footer_hero_in: 'order a pressing',
@@ -180,11 +190,20 @@ const zh: Dict = {
   like: '点赞',
   liked: '已赞',
 
+  notes_title: '内页留言',
+  notes_empty: '还没有留言 · 由你开始',
+  notes_placeholder: '写句留言…',
+  notes_send: '发送',
+  notes_you: '你',
+  notes_someone: '某人',
+  notes_signedout: '在 App 内打开即可留言',
+
   perf_a_side: '— A 面 —',
   perf_process: '— 工序 —',
   perf_credits: '— 信息 —',
   perf_tear: '— 沿虚线撕开 ✂ —',
   perf_archive: '— 目录 —',
+  perf_notes: '— 内页留言 —',
 
   footer_hero_in: '下单压片',
   footer_hero_pressing: '压片进行中',
@@ -261,11 +280,20 @@ const es: Dict = {
   like: 'me gusta',
   liked: 'gustó',
 
+  notes_title: 'notas de portada',
+  notes_empty: 'aún no hay notas. deja la primera.',
+  notes_placeholder: 'deja una nota…',
+  notes_send: 'enviar',
+  notes_you: 'tú',
+  notes_someone: 'alguien',
+  notes_signedout: 'abre en la app para dejar una nota.',
+
   perf_a_side: '— lado a —',
   perf_process: '— proceso —',
   perf_credits: '— créditos —',
   perf_tear: '— rasgar aquí ✂ —',
   perf_archive: '— catálogo —',
+  perf_notes: '— notas —',
 
   footer_hero_in: 'encarga una prensa',
   footer_hero_pressing: 'prensando ahora',
@@ -342,11 +370,20 @@ const pt: Dict = {
   like: 'curtir',
   liked: 'curtido',
 
+  notes_title: 'notas da capa',
+  notes_empty: 'ainda sem notas. deixe a primeira.',
+  notes_placeholder: 'deixe uma nota…',
+  notes_send: 'enviar',
+  notes_you: 'você',
+  notes_someone: 'alguém',
+  notes_signedout: 'abra no app para deixar uma nota.',
+
   perf_a_side: '— lado a —',
   perf_process: '— processo —',
   perf_credits: '— créditos —',
   perf_tear: '— rasgue aqui ✂ —',
   perf_archive: '— catálogo —',
+  perf_notes: '— notas —',
 
   footer_hero_in: 'encomenda uma prensa',
   footer_hero_pressing: 'prensando agora',
@@ -423,11 +460,20 @@ const ru: Dict = {
   like: 'лайк',
   liked: 'нравится',
 
+  notes_title: 'заметки на обложке',
+  notes_empty: 'пока нет заметок. оставь первую.',
+  notes_placeholder: 'оставь заметку…',
+  notes_send: 'отправить',
+  notes_you: 'ты',
+  notes_someone: 'кто-то',
+  notes_signedout: 'откройте в приложении, чтобы оставить заметку.',
+
   perf_a_side: '— сторона a —',
   perf_process: '— процесс —',
   perf_credits: '— титры —',
   perf_tear: '— оторвите здесь ✂ —',
   perf_archive: '— каталог —',
+  perf_notes: '— заметки —',
 
   footer_hero_in: 'заказать пресс',
   footer_hero_pressing: 'идёт пресс',
@@ -504,11 +550,20 @@ const ja: Dict = {
   like: 'いいね',
   liked: 'いいね済',
 
+  notes_title: 'ライナーノーツ',
+  notes_empty: 'まだメモがありません。最初の一言を。',
+  notes_placeholder: 'メモを残す…',
+  notes_send: '送信',
+  notes_you: 'あなた',
+  notes_someone: '誰か',
+  notes_signedout: 'アプリで開いてメモを残せます。',
+
   perf_a_side: '— A 面 —',
   perf_process: '— 工程 —',
   perf_credits: '— クレジット —',
   perf_tear: '— ここで切る ✂ —',
   perf_archive: '— カタログ —',
+  perf_notes: '— ライナーノーツ —',
 
   footer_hero_in: 'プレスを依頼',
   footer_hero_pressing: 'プレス中',
@@ -585,11 +640,20 @@ const ko: Dict = {
   like: '좋아요',
   liked: '좋아요 함',
 
+  notes_title: '라이너 노트',
+  notes_empty: '아직 메모가 없어. 첫 메모를 남겨봐.',
+  notes_placeholder: '메모 남기기…',
+  notes_send: '보내기',
+  notes_you: '나',
+  notes_someone: '누군가',
+  notes_signedout: '앱에서 열면 메모를 남길 수 있어.',
+
   perf_a_side: '— A 면 —',
   perf_process: '— 공정 —',
   perf_credits: '— 크레딧 —',
   perf_tear: '— 여기를 자르세요 ✂ —',
   perf_archive: '— 카탈로그 —',
+  perf_notes: '— 라이너 노트 —',
 
   footer_hero_in: '프레스 주문',
   footer_hero_pressing: '프레스 중',
@@ -666,11 +730,20 @@ const fr: Dict = {
   like: 'aimer',
   liked: 'aimé',
 
+  notes_title: 'notes de pochette',
+  notes_empty: 'aucune note. laisse la première.',
+  notes_placeholder: 'laisse une note…',
+  notes_send: 'envoyer',
+  notes_you: 'toi',
+  notes_someone: 'quelqu’un',
+  notes_signedout: 'ouvre dans l’app pour laisser une note.',
+
   perf_a_side: '— face a —',
   perf_process: '— processus —',
   perf_credits: '— crédits —',
   perf_tear: '— déchirer ici ✂ —',
   perf_archive: '— catalogue —',
+  perf_notes: '— notes —',
 
   footer_hero_in: 'commander un pressage',
   footer_hero_pressing: 'pressage en cours',

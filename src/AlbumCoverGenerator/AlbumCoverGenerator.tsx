@@ -12,6 +12,12 @@ import { useWall } from './hooks/useWall';
 import { prependAlbum, newAlbumId } from './utils/album';
 import { catalogNumber } from './utils/catalog';
 import { vinylFor } from './utils/vinyl';
+import {
+  appendMessage,
+  newMessage,
+  guestbookNotifyConfig,
+  threadFor,
+} from '@shared/social/guestbook';
 import { startAmbient, stopAmbient, playNeedleDrop, playClick, playRevealChord, installGlobalTapFeedback } from './utils/audio';
 import { t } from './i18n';
 import type { Album, AlbumSave, Phase } from './types';
@@ -242,6 +248,43 @@ export default function AlbumCoverGenerator() {
     persist(nextSave);
   };
 
+  // ─── Guestbook notes ──────────────────────────────────────────────
+  // Public text notes left on a cover. Stored in the SENDER's own blob
+  // (full read-modify-write through the mirror so reactions/albums are
+  // never wiped), aggregated cross-user best-effort by useWall, and the
+  // cover's author is pinged once per target per session.
+  const notedRef = useRef<Set<string>>(new Set());
+  const sendMessage = (album: Album, text: string) => {
+    const authorId = currentAuthor?.userId;
+    const selfId = telegramId ? String(telegramId) : 'self';
+    // The cover's author is the notify target; skip self / self-authored /
+    // demo entries (no real userId).
+    const toUserId = (authorId && authorId !== 'self' && authorId !== selfId)
+      ? authorId
+      : undefined;
+    const msg = newMessage(album.id, toUserId, text);
+    if (!msg) return;
+    // Full read-modify-write — keep albums + reactions intact.
+    const base: AlbumSave = mirror ?? { albums: [], reactions: {} };
+    const nextSave = appendMessage(base, msg);
+    setMirror(nextSave);
+    persist(nextSave);
+    // Ping the author once per cover per session.
+    if (toUserId && !notedRef.current.has(album.id)) {
+      notedRef.current.add(album.id);
+      events.trigger(
+        'albumcover_note',
+        guestbookNotifyConfig({
+          toUserId,
+          refUrl: album.imageUrl,
+          note: text,
+          template: '{sender_name} left a note on your cover',
+          imagePrompt: `${album.bandName ?? 'band'} — ${album.title ?? 'untitled'}, indie record cover`,
+        }),
+      );
+    }
+  };
+
   // ---- Phase transitions ----
 
   const handleSubmit = async (words: [string, string, string]) => {
@@ -373,6 +416,14 @@ export default function AlbumCoverGenerator() {
             author={cameFromWall && currentAuthor && currentAuthor.userName
               ? currentAuthor
               : undefined}
+            thread={threadFor(
+              current.id,
+              wall.messagesByTarget,
+              mirror?.messages,
+              telegramId ? String(telegramId) : undefined,
+            )}
+            selfUserId={telegramId ? String(telegramId) : undefined}
+            onSendNote={(text) => sendMessage(current, text)}
           />
         )}
         {phase === 'wall' && (
