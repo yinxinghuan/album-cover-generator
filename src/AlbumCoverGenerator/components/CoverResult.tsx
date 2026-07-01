@@ -14,6 +14,8 @@ import { timeAgo, MAX_LEN, type GuestMessage } from '@shared/social/guestbook';
 import { locale } from '../i18n';
 import { REACTION_KINDS, type Album, type ReactionKind } from '../types';
 
+const ALTERU_APP_URL = 'https://apps.apple.com/app/id6769646546';
+
 interface Props {
   album: Album;
   /** 'release' = just-pressed (default); 'play' = viewing from wall. */
@@ -346,7 +348,12 @@ function Guestbook({ thread, selfUserId, onSend }: {
       {isInAigram ? (
         <Compose onSend={onSend} />
       ) : (
-        <div className="acg-notes__signedout">{t('notes_signedout')}</div>
+        <div className="acg-notes__signedout acg-notes__download">
+          <span>{t('notes_signedout')}</span>
+          <a href={ALTERU_APP_URL} target="_blank" rel="noopener noreferrer">
+            {t('download_alteru')}
+          </a>
+        </div>
       )}
     </div>
   );

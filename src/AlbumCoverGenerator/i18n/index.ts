@@ -103,7 +103,8 @@ const en: Dict = {
   notes_send: 'send',
   notes_you: 'you',
   notes_someone: 'someone',
-  notes_signedout: 'open in the app to leave a note.',
+  notes_signedout: 'open in AlterU to leave a note.',
+  download_alteru: 'Get AlterU on the App Store',
 
   // Perforation labels
   perf_a_side: '— side a —',
@@ -196,7 +197,8 @@ const zh: Dict = {
   notes_send: '发送',
   notes_you: '你',
   notes_someone: '某人',
-  notes_signedout: '在 App 内打开即可留言',
+  notes_signedout: '在 AlterU 中打开即可留言',
+  download_alteru: '下载 AlterU',
 
   perf_a_side: '— A 面 —',
   perf_process: '— 工序 —',
@@ -286,7 +288,7 @@ const es: Dict = {
   notes_send: 'enviar',
   notes_you: 'tú',
   notes_someone: 'alguien',
-  notes_signedout: 'abre en la app para dejar una nota.',
+  notes_signedout: 'abre en AlterU para dejar una nota.',
 
   perf_a_side: '— lado a —',
   perf_process: '— proceso —',
@@ -376,7 +378,7 @@ const pt: Dict = {
   notes_send: 'enviar',
   notes_you: 'você',
   notes_someone: 'alguém',
-  notes_signedout: 'abra no app para deixar uma nota.',
+  notes_signedout: 'abra no AlterU para deixar uma nota.',
 
   perf_a_side: '— lado a —',
   perf_process: '— processo —',
@@ -466,7 +468,7 @@ const ru: Dict = {
   notes_send: 'отправить',
   notes_you: 'ты',
   notes_someone: 'кто-то',
-  notes_signedout: 'откройте в приложении, чтобы оставить заметку.',
+  notes_signedout: 'откройте в AlterU, чтобы оставить заметку.',
 
   perf_a_side: '— сторона a —',
   perf_process: '— процесс —',
@@ -556,7 +558,7 @@ const ja: Dict = {
   notes_send: '送信',
   notes_you: 'あなた',
   notes_someone: '誰か',
-  notes_signedout: 'アプリで開いてメモを残せます。',
+  notes_signedout: 'AlterUで開いてメモを残せます。',
 
   perf_a_side: '— A 面 —',
   perf_process: '— 工程 —',
@@ -646,7 +648,7 @@ const ko: Dict = {
   notes_send: '보내기',
   notes_you: '나',
   notes_someone: '누군가',
-  notes_signedout: '앱에서 열면 메모를 남길 수 있어.',
+  notes_signedout: 'AlterU에서 열면 메모를 남길 수 있어.',
 
   perf_a_side: '— A 면 —',
   perf_process: '— 공정 —',
@@ -736,7 +738,7 @@ const fr: Dict = {
   notes_send: 'envoyer',
   notes_you: 'toi',
   notes_someone: 'quelqu’un',
-  notes_signedout: 'ouvre dans l’app pour laisser une note.',
+  notes_signedout: 'ouvre dans AlterU pour laisser une note.',
 
   perf_a_side: '— face a —',
   perf_process: '— processus —',
